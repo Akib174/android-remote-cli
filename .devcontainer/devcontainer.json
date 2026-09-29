@@ -1,0 +1,17 @@
+{
+  "name": "Android CLI Environment",
+  "image": "://microsoft.com",
+  "features": {
+    "ghcr.io/devcontainers/features/java:1": {
+      "version": "17"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "vscjava.vscode-java-pack"
+      ]
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup-android.sh"
+}
