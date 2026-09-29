@@ -90,6 +90,8 @@ data class Message(
     val delivered: Boolean? = null,
     /** voice auto-play flag (red mic mode) */
     val ap: Boolean? = null,
+    /** call-history row metadata (type == call) */
+    val call: JsonElement? = null,
 )
 
 @Serializable
@@ -174,7 +176,7 @@ enum class ThemeMode { @SerialName("light") LIGHT, @SerialName("dark") DARK }
 data class CallUi(
     val chatId: String = "",
     val mode: String = "audio",           // audio | video
-    val incoming: JsonElement? = null,
+    val incoming: Boolean? = null,
     val auto: Boolean? = null,
     val acceptedNow: Boolean? = null,
 )

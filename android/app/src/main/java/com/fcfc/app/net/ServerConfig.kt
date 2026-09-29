@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
  * Every Android network hop goes through the Worker:
  *   - REST   → https://fcfc-backend.nakibpro1.workers.dev/api/...
  *   - WS     → wss://fcfc-backend.nakibpro1.workers.dev/ws (chat + hub sockets)
- *   - Calls  → the same origin under /calls/* — the Worker holds the
+ *   - Calls  → the same origin under the calls endpoints — the Worker holds the
  *              Cloudflare Calls app credentials (CALLS_APP_ID / CALLS_API_TOKEN
  *              / App Secret) server-side and proxies SDP/tracks negotiation.
  *
