@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- fcfc "F" glyph ported from the web favicon.svg (64 viewBox) -->
+    <group
+        android:scaleX="1.2"
+        android:scaleY="1.2"
+        android:translateX="15.6"
+        android:translateY="15.6">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M18,22c0,-2.2 1.8,-4 4,-4h20a4,4 0 0 1 0,8H26v6h12a4,4 0 0 1 0,8H26v8a4,4 0 0 1 -8,0V22z" />
+    </group>
+</vector>
