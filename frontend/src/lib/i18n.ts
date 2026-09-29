@@ -1,0 +1,633 @@
+// i18n — ডিফল্ট ইংরেজি; সেটিংস থেকে বাংলা করা যায়।
+// useT() হুক রিঅ্যাক্টিভ — ভাষা বদলালেই সব কম্পোনেন্ট রি-রেন্ডার হয়।
+// t() ফাংশন নন-রিঅ্যাক্ট মডিউলে (utils/notify/worker-push) কল-টাইমে ভাষা পড়ে।
+import { create } from 'zustand'
+
+export type Lang = 'en' | 'bn'
+
+const DICT: Record<Lang, Record<string, string>> = {
+  en: {
+    // ── app shell ──
+    e2eTagline: 'End-to-end encrypted · Pick a chat to start talking',
+    newVersion: '✨ A new version is available — reload to update',
+    joinInvalid: 'This invite link is not valid',
+    // ── auth ──
+    login: 'Log in', signup: 'Sign up',
+    loginBtn: 'Log In', signupBtn: 'Create Account',
+    username: 'Username', usernamePh: 'your_name',
+    password: 'Password', confirmPass: 'Confirm password',
+    passwordPh: 'At least 8 characters',
+    passMismatch: "Passwords don't match",
+    nameTaken: 'This name is taken',
+    nameInvalid: '3–24 chars (a-z, 0-9, _)',
+    e2eBadge: 'End-to-end encrypted',
+    noRecovery: 'I understand that if I lose my password or username, my account and all chat history will be permanently lost and cannot be recovered in any way.',
+    signupNote: 'No email/phone verification · Keys are generated on your device · Encrypted key backup is derived from your password',
+    signupFailed: 'Sign up failed', loginFailed: 'Log in failed',
+    showPass: 'Show password', hidePass: 'Hide password',
+    phoneLabel: 'Phone number', phonePh: '+8801XXXXXXXXX',
+    emailLabel: 'Email', emailPh: 'you@example.com', optionalTag: 'optional',
+    phoneTaken: 'Phone already registered',
+    phoneEmailSearchHint: 'Others can find you by your username, phone number or email from the search.',
+    // ── 🆕 auth v2 — login/signup wizard + user-id/passcode ──
+    loginWithPass: 'Username & Password', loginWithPin: 'User ID & Passcode',
+    enterUserId: 'Enter your user ID', userIdHint: 'The numeric ID you set at sign-up',
+    enterPasscode: 'Enter passcode', passcodeHintLogin: '6-8 digits',
+    nextBtn: 'Next', backBtn: 'Back', skipBtn: 'Skip',
+    passShort: 'At least 8 characters',
+    suNameTitle: 'Enter your name', suNameSub: 'This is the name others see in chats', suNamePh: 'Your name',
+    suUserTitle: 'Enter your username', suUserSub: 'Unique — a-z, 0-9, _ (used for login & search)',
+    suPhoneSub: 'Optional — friends can find you by number. Skip if you want.',
+    suEmailSub: 'Optional — you can skip this.',
+    suPassTitle: 'Create a password', suPassSub: 'Minimum 8 characters',
+    suConfirmSub: 'Type the same password again',
+    suUidTitle: 'Set your user ID', suUidSub: 'Minimum 4 digits (0-9) — unique, like your username',
+    uidAvailable: 'This ID is available', uidTaken: 'This ID is already taken',
+    suPinTitle: 'Set passcode', suPinSub: '6-8 digits — used for user-ID login',
+    suPin2Title: 'Re-enter passcode', suPin2Sub: 'Confirm your passcode', pinMatched: 'Passcodes match',
+    suFinishTitle: 'One last thing', suFinishSub: 'Account:',
+    // ── 🆕 settings — user-id & passcode management ──
+    passcodeRow: 'User ID & Passcode', passcodeRowSubNone: 'Set up user ID & passcode login',
+    passcodeRowSub: 'Log in with your numeric ID', passcodeT: 'User ID & Passcode',
+    uidImmutable: 'User ID — cannot be changed later', uidNotSet: 'Not set',
+    passcodeVerifyPassT: 'Verify your password', passcodeVerifyPassSub: 'Password is required to manage your passcode',
+    passcodeSetupBtn: 'Set up', passcodeChangeBtn: 'Change passcode',
+    passWrong: 'Wrong password', passcodeSavedToast: 'Passcode saved',
+    verifyBtn: 'Verify', nameLabel: 'Name', nameSub: 'Shown to others in chats',
+    // ── chat list ──
+    settings: 'Settings', searchPh: 'Search…',
+    newChatBtn: 'New chat/group',
+    msgRequests: 'Message requests',
+    archivedChats: 'Archived chats',
+    noChatsYet: 'No chats yet. Tap the ✏️ button above to start.',
+    noChatsFound: 'No chats found',
+    typing: 'typing…',
+    pinChat: 'Pin chat', unpinChat: 'Unpin chat',
+    mute8: 'Mute (8 hours)', muteForever: 'Mute (forever)', unmute: 'Unmute',
+    archive: 'Archive', unarchive: 'Unarchive',
+    deleteChatMe: 'Delete chat (only for me)',
+    chatDeleted: 'Chat removed from your list',
+    // ── chat window ──
+    membersCount: '{n} members',
+    online: 'online',
+    accountDeleted: 'Account deleted',
+    lastSeenHidden: 'Last seen hidden',
+    lastSeenAt: 'Last seen: {when}',
+    typingMulti: '{names} typing…',
+    someone: 'Someone',
+    callOngoing: 'Call in progress — join',
+    searchInChat: 'Search in this chat',
+    changeWallpaper: 'Change wallpaper',
+    mute8h: 'Mute 8 hours',
+    disappOff: 'Disappearing off', disapp24: 'Disappearing (24 hours)',
+    exportChat: 'Export chat',
+    groupInfo: 'Group info', viewProfile: 'View profile',
+    pinnedLabel: 'Pinned', nPinnedMsgs: '({n} messages)',
+    encryptedNotice: '🔒 This chat is end-to-end encrypted. Send the first message to get started.',
+    you: 'You', guest: 'Guest',
+    chatDeletedToast: 'Chat deleted',
+    blockedBar: 'You blocked @{name} — unblock to send messages',
+    unblock: 'Unblock',
+    unblockedToast: 'Unblocked — you can message now',
+    // ── composer ──
+    writeMessage: 'Write a message…',
+    recording: 'Recording…', cancel: 'Cancel', sendBtn: 'Send',
+    photo: 'Photo', video: 'Video', file2gb: 'File (2GB)',
+    stickerHint: 'To send stickers:', stickers: 'Stickers',
+    uploadFailed: 'Upload failed: {msg}',
+    micDenied: 'Microphone access was not granted',
+    maxSize2gb: 'Maximum file size is 2GB',
+    replyLabel: 'Reply', disappModeOn: 'Disappearing mode on',
+    // 🔴🔵 ভয়েস দুই-মোড
+    voiceAutoHint: 'Voice message — auto-plays on the other side',
+    voiceNormalHint: 'Voice message — normal',
+    recordingAuto: 'recording · auto-play on the other side',
+    autoPlayTag: 'auto',
+    // 🧡 লাইক-বাটন
+    likeBtnHint: 'Send instantly · long-press to change emoji',
+    likePickTitle: 'Like button for this chat',
+    likeUpdatedToast: 'Like button updated for this chat',
+    likeResetToast: 'Back to your default like emoji',
+    likeResetDefault: 'Reset to my default',
+    likeBtnSetting: 'Like button emoji',
+    likeBtnSettingSub: 'Default for all chats — change per-chat from a chat\u2019s profile',
+    // 💬 হোভার-অ্যাকশন
+    reactBtn: 'React', moreBtn: 'More',
+    // ── message bubble ──
+    forward: 'Forward', star: 'Star', unstar: 'Remove star',
+    pinUnpin: 'Pin/Unpin', copyText: 'Copy text', copied: 'Copied',
+    edit: 'Edit', deleteMe: 'Delete (only for me)',
+    deleteAll: 'Delete for everyone', seenBy: 'Seen by',
+    editedTag: 'edited', forwardedTag: 'Forwarded',
+    mediaLoadFail: "Couldn't load media", fileLabel: 'File', download: 'Download',
+    // ── dates / times ──
+    today: 'Today', yesterday: 'Yesterday',
+    justNow: 'just now', minAgo: '{n} min ago', hourAgo: '{n} h ago',
+    longAgo: 'a long time ago',
+    mute1d: '1 day', muteAlways: 'Always',
+    // ── previews ──
+    pImage: '📷 Photo', pVideo: '🎬 Video', pVoice: '🎤 Voice message',
+    pSticker: '🌟 Sticker', pGif: '🎞️ GIF', pCall: '📞 Call',
+    // ── modals ──
+    searchPh2: 'Search name, phone, email or messages…',
+    usersLabel: 'Users', messagesLabel: 'Messages', nothingFound: 'Nothing found',
+    newChatT: 'New chat', dmChat: '1:1 chat', newGroup: 'New group',
+    searchUserPh: 'Search username / phone / email…', groupNamePh: 'Group name',
+    descOptional: 'Description (optional)', memberLimit: 'Member limit:',
+    addMembersPh: 'Search to add members…', createGroup: 'Create group',
+    nMembersSuffix: '({n} members)',
+    orInvite: 'Or join with an invite link', linkCodePh: 'Link code…', joinBtn: 'Join',
+    reqSent: 'Message request sent — chat opens when accepted',
+    reqSentShort: 'Message request sent',
+    groupInfoT: 'Group info', membersLabel: 'Members',
+    owner: 'Owner', admin: 'Admin', makeAdmin: 'Make admin', removeAdmin: 'Remove admin',
+    removeBtn: 'Remove', inviteLinksLabel: 'Invite links',
+    newInvite: 'Create new invite link',
+    inviteCopied: 'Invite link copied: {link}',
+    profileT: 'Profile', sendMsgBtn: 'Send message',
+    blockBtn: 'Block', blockedToast: 'Blocked — their messages can no longer reach you',
+    userDeleted: 'This user deleted their account',
+    forwardT: 'Forward to', forwardedToast: 'Forwarded',
+    editMsgT: 'Edit message', saveBtn: 'Save',
+    deviceApprovalT: '🔐 New device login',
+    deviceApprovalBody: '<b>{name}</b> just logged in to your account.',
+    deviceApprovalHint: "If this wasn't you, press Decline — that device's session is revoked immediately and it gets logged out.",
+    itWasMe: 'It was me', declineLogout: 'Decline · Log out',
+    deviceLoggedOut: 'That device has been logged out',
+    failedRetry: 'Failed — try again',
+    requestsT: 'Message requests', noRequests: 'No requests',
+    seenByT: 'Seen by', nobodySeen: 'No one has seen it yet',
+    wallpaperT: 'Chat wallpaper',
+    wallpaperHint: 'Upload an image or paste an image URL.',
+    uploadPhotoBtn: 'Upload photo', giveUrlBtn: 'Enter URL',
+    urlPrompt: 'Wallpaper image URL:',
+    resetDefault: 'Reset to default', wallpaperSetFail: "Couldn't set wallpaper",
+    confirmT: 'Confirm', yesBtn: 'Yes',
+    msgRejected: 'Message not sent — the recipient blocked you or your request is still pending',
+    newReqToast: 'New message request',
+    reqAcceptedToast: 'Your request was accepted',
+    // ── settings ──
+    profilePanelT: 'Profile', privacyT: 'Privacy', notificationsT: 'Notifications',
+    devicesT: 'Devices & sessions', blockedPanelT: 'Blocked users',
+    themePanelT: 'Theme', accountT: 'Account',
+    notifRowSub: 'Sound, push',
+    privacyRowSub: 'Message permission, last seen',
+    devicesRowSub: 'Remote logout other devices',
+    starredRow: 'Starred messages',
+    lightTheme: 'Light theme', darkTheme: 'Dark theme',
+    deleteAccountRow: 'Delete account', deleteAccountSub: 'Everything is permanently erased',
+    logoutRow: 'Log out',
+    logoutConfirmB: 'Log out from this device?',
+    languageRow: 'Language', languageSub: 'App interface language',
+    english: 'English', bangla: 'বাংলা',
+    addAbout: 'Add an about…',
+    usernameFixed: 'Username (cannot be changed)',
+    aboutBio: 'About / Bio', savedToast: 'Saved',
+    whoCanDm: 'Who can message you directly',
+    whoCanDmHint: "With 'Request only', people must send a request before they can chat with you.",
+    everyone: 'Everyone', requestOnly: 'Request only',
+    lastSeenWho: 'Who can see your last seen', nobody: 'Nobody',
+    updatedToast: 'Updated',
+    e2eNote: '🔐 All messages are end-to-end encrypted. The server only ever sees encrypted data — your private keys never leave your device.',
+    soundRow: 'Notification sound', soundRowSub: 'Ping on new message',
+    pushRow: 'Browser push notifications', pushRowSub: 'Tray notifications even when the app is closed',
+    enableBtn: 'Enable', pushOnToast: 'Push enabled ✅', pushFailToast: "Couldn't enable push",
+    perChatMuteHint: "Per-chat mute (8h / 1 day / forever) is available from a chat's right-click menu.",
+    thisDevice: '(this device)', lastActive: 'Last active:',
+    revokedTag: 'Revoked', awaitingTag: 'Awaiting approval',
+    sessionClosed: 'Session closed', noDevices: 'No device info',
+    noBlocked: 'No one is blocked',
+    avatarUpdated: 'Profile picture updated',
+    deleteWarn: '⚠️ Deleting your account erases your profile, username and encrypted key backup. In 1:1 chats others will see "user deleted their account"; you will be removed from groups. This can never be undone.',
+    confirmPassPh: 'Confirm with your password',
+    permDelete: 'Permanently delete my account',
+    accountDeletedToast: 'Account deleted',
+    archivedT: 'Archived chats', noArchived: 'No archived chats',
+    starredT: 'Starred messages', noStarred: 'No starred messages yet',
+    starHint: 'Right-click a message and press ⭐ Star',
+    // ── calls ──
+    callT: 'Call',
+    voiceCallTag: '🔊 Voice call — end-to-end encrypted media',
+    callNotStarted: "Couldn't start the call",
+    incomingCall: 'Incoming call…',
+    incomingVideoCall: 'Incoming video call…',
+    acceptBtn: 'Accept', declineBtn: 'Decline',
+    callDeclinedToast: 'Call declined',
+    callEndedToast: 'Call ended',
+    callMissedToast: 'Missed call — caller canceled',
+    camUnavailableAudio: 'Camera not available — continuing with audio',
+    noMicNoCam: 'No mic/camera found — call continues without them',
+    noSession: 'No call session',
+    callAutoHint: 'Call — auto-answers on the other side',
+    callNormalHint: 'Call — rings on the other side',
+    callAutoAnswered: '📞 Incoming call auto-answered',
+    // 🎮 গেম-মোড (গ্রুপ কল)
+    gameModeBtn: 'Game mode',
+    gameInviteT: '{name} wants you in their game team',
+    gameTeamLabel: 'Team',
+    gameEnterBtn: 'Enter',
+    gameDeclineBtn: 'Decline',
+    gameWaitingT: 'Waiting for teammates to press Enter…',
+    gameWaitingHint: 'team activates when everyone enters',
+    gameActiveT: 'Game mode active — you hear your team only',
+    gameExitBtn: 'Exit',
+    gameSwitchBtn: 'Switch team',
+    gameEditTeamBtn: 'Edit team',
+    gameInviteBtn: 'Invite & Enter',
+    gameSelectHint: 'Select teammates — only they will hear you (and you them). Everyone must press Enter to activate.',
+    gameNoOthers: 'No one else is in the call yet',
+    // 🖱️ সাইডবার-রিসাইজ
+    resizeHint: 'Drag to resize · double-click to reset',
+    // 🔗 ইনভাইট
+    oneTimeTag: 'one-time use',
+    inviteUnused: 'unused', inviteUsed: 'used',
+    // ── install banner ──
+    installBannerT: 'Install fcfc',
+    installBannerSub: 'Fast, offline-ready, right on your device',
+    installBtn2: 'Install',
+    neverShowAgain: 'Never show again',
+    installedToast: 'Installed 🎉',
+    installHintBrowser: 'Use your browser menu → "Install app" / "Add to Home screen"',
+    // ── misc ──
+    recentEmojis: 'Recent',
+    msgNotFound: 'Message not found',
+    // ── notifications ──
+    groupFallback: 'Group', chatFallback: 'Chat',
+    deletedAccount: 'Deleted account',
+    encryptedMsgBody: '(Encrypted message)',
+    newEncryptedMsg: 'New encrypted message',
+    // ── 🍔 Telegram-style hamburger menu ──
+    menuMyProfile: 'My Profile',
+    menuSaved: 'Saved Messages',
+    menuContacts: 'Contacts',
+    menuMore: 'More',
+    menuNightMode: 'Night Mode',
+    contactsT: 'Contacts',
+    noContacts: 'No contacts yet — search by name to add people',
+    // ── 📌 Saved Messages (self-chat) ──
+    savedChatTitle: 'Saved Messages',
+    savedSub: 'Forward messages here to save them',
+    savedHint: 'Save anything you want to find later — notes, links, files',
+    // ── 📞 call history pills ──
+    callIncoming: 'Incoming',
+    callOutgoing: 'Outgoing',
+    callTypeCall: 'Call',
+    callTypeVideo: 'Video Call',
+    callCanceled: 'Canceled Call',
+    callMissed: 'Missed Call',
+    callDeclined: 'Declined Call',
+    durMin1: '{n} minute',
+    durMinN: '{n} minutes',
+    durSec1: '{n} second',
+    durSecN: '{n} seconds',
+    callRinging: 'Ringing…',
+    callConnecting: 'Connecting…',
+    shareOnToast: 'You are sharing your screen',
+    groupExistsToast: 'A group with this name already exists — opened it',
+  },
+
+  bn: {
+    // ── app shell ──
+    e2eTagline: 'এন্ড-টু-এন্ড এনক্রিপ্টেড · চ্যাট বেছে নিয়ে কথা শুরু করুন',
+    newVersion: '✨ নতুন ভার্সন এসেছে — রিলোড করলেই পাবেন',
+    joinInvalid: 'ইনভাইট লিংকটি সঠিক নয়',
+    // ── auth ──
+    login: 'লগইন', signup: 'সাইনআপ',
+    loginBtn: 'লগইন করুন', signupBtn: 'অ্যাকাউন্ট তৈরি করুন',
+    username: 'ইউজারনেম', usernamePh: 'you_name',
+    password: 'পাসওয়ার্ড', confirmPass: 'পাসওয়ার্ড আবার দিন',
+    passwordPh: 'কমপক্ষে ৮ অক্ষর',
+    passMismatch: 'পাসওয়ার্ড দুটি মিলছে না',
+    nameTaken: 'নামটি নেওয়া হয়ে গেছে',
+    nameInvalid: '৩–২৪ অক্ষর (a-z, 0-9, _)',
+    e2eBadge: 'এন্ড-টু-এন্ড এনক্রিপ্টেড',
+    noRecovery: 'আমি বুঝেছি যে পাসওয়ার্ড বা ইউজারনেম হারিয়ে গেলে আমার অ্যাকাউন্ট এবং সব চ্যাট হিস্টোরি স্থায়ীভাবে হারিয়ে যাবে — এটি কোনোভাবেই রিকভার করা যাবে না।',
+    signupNote: 'কোনো ইমেইল/ফোন যাচাই নেই · কী আপনার ডিভাইসে তৈরি হয় · পাসওয়ার্ড থেকেই এনক্রিপ্টেড কী-ব্যাকআপ বানানো হয়',
+    signupFailed: 'সাইনআপ ব্যর্থ', loginFailed: 'লগইন ব্যর্থ',
+    showPass: 'পাসওয়ার্ড দেখান', hidePass: 'পাসওয়ার্ড লুকান',
+    phoneLabel: 'মোবাইল নম্বর', phonePh: '+8801XXXXXXXXX',
+    emailLabel: 'ইমেইল', emailPh: 'you@example.com', optionalTag: 'ঐচ্ছিক',
+    phoneTaken: 'এই নম্বরে আগেই অ্যাকাউন্ট আছে',
+    phoneEmailSearchHint: 'অন্যরা আপনাকে ইউজারনেম, ফোন নম্বর বা ইমেইল দিয়ে সার্চ করে খুঁজে পাবে।',
+    // ── 🆕 auth v2 — login/signup wizard + user-id/passcode ──
+    loginWithPass: 'ইউজারনেম ও পাসওয়ার্ড', loginWithPin: 'ইউজার-আইডি ও পাসকোড',
+    enterUserId: 'আপনার ইউজার-আইডি দিন', userIdHint: 'সাইনআপে সেট করা নিউমেরিক আইডি',
+    enterPasscode: 'পাসকোড দিন', passcodeHintLogin: '৬-৮ ডিজিট',
+    nextBtn: 'পরবর্তী', backBtn: 'ফিরে যান', skipBtn: 'স্কিপ',
+    passShort: 'কমপক্ষে ৮ অক্ষর',
+    suNameTitle: 'আপনার নাম লিখুন', suNameSub: 'চ্যাটে অন্যরা এই নামটাই দেখবে', suNamePh: 'আপনার নাম',
+    suUserTitle: 'ইউজারনেম লিখুন', suUserSub: 'ইউনিক — a-z, 0-9, _ (লগইন ও সার্চে ব্যবহার হবে)',
+    suPhoneSub: 'ঐচ্ছিক — নম্বর দিয়েও আপনাকে খুঁজে পাওয়া যাবে। চাইলে স্কিপ করুন।',
+    suEmailSub: 'ঐচ্ছিক — চাইলে স্কিপ করুন।',
+    suPassTitle: 'পাসওয়ার্ড তৈরি করুন', suPassSub: 'সর্বনিম্ন ৮ অক্ষর',
+    suConfirmSub: 'একই পাসওয়ার্ড আবার লিখুন',
+    suUidTitle: 'ইউজার-আইডি সেট করুন', suUidSub: 'সর্বনিম্ন ৪ ডিজিট (০-৯) — ইউজারনেমের মতোই ইউনিক',
+    uidAvailable: 'এই আইডি খোলা আছে', uidTaken: 'এই আইডি নেওয়া হয়ে গেছে',
+    suPinTitle: 'পাসকোড সেট করুন', suPinSub: '৬-৮ ডিজিট — ইউজার-আইডি লগইনে লাগবে',
+    suPin2Title: 'পাসকোড আবার দিন', suPin2Sub: 'পাসকোড নিশ্চিত করুন', pinMatched: 'পাসকোড মিলেছে',
+    suFinishTitle: 'শেষ একটা কথা', suFinishSub: 'অ্যাকাউন্ট:',
+    // ── 🆕 settings — user-id & passcode management ──
+    passcodeRow: 'ইউজার-আইডি ও পাসকোড', passcodeRowSubNone: 'ইউজার-আইডি ও পাসকোড লগইন সেট-আপ করুন',
+    passcodeRowSub: 'নিউমেরিক আইডি দিয়ে লগইন', passcodeT: 'ইউজার-আইডি ও পাসকোড',
+    uidImmutable: 'ইউজার-আইডি — পরে বদলানো যাবে না', uidNotSet: 'সেট করা নেই',
+    passcodeVerifyPassT: 'পাসওয়ার্ড দিয়ে যাচাই করুন', passcodeVerifyPassSub: 'পাসকোড ম্যানেজ করতে পাসওয়ার্ড লাগবে',
+    passcodeSetupBtn: 'সেট-আপ করুন', passcodeChangeBtn: 'পাসকোড বদলান',
+    passWrong: 'পাসওয়ার্ড ভুল', passcodeSavedToast: 'পাসকোড সেভ হয়েছে',
+    verifyBtn: 'যাচাই করুন', nameLabel: 'নাম', nameSub: 'চ্যাটে অন্যদের কাছে দেখায়',
+    // ── chat list ──
+    settings: 'সেটিংস', searchPh: 'সার্চ…',
+    newChatBtn: 'নতুন চ্যাট/গ্রুপ',
+    msgRequests: 'মেসেজ রিকোয়েস্ট',
+    archivedChats: 'আর্কাইভড চ্যাট',
+    noChatsYet: 'এখনো কোনো চ্যাট নেই। উপরের ✏️ বাটনে ট্যাপ করে শুরু করুন।',
+    noChatsFound: 'কোনো চ্যাট পাওয়া যায়নি',
+    typing: 'টাইপ করছে…',
+    pinChat: 'পিন চ্যাট', unpinChat: 'আনপিন চ্যাট',
+    mute8: 'মিউট (৮ ঘণ্টা)', muteForever: 'মিউট (সবসময়)', unmute: 'আনমিউট',
+    archive: 'আর্কাইভ', unarchive: 'আনআর্কাইভ',
+    deleteChatMe: 'চ্যাট ডিলিট (শুধু আমার)',
+    chatDeleted: 'চ্যাট আপনার লিস্ট থেকে মুছে গেছে',
+    // ── chat window ──
+    membersCount: '{n} জন মেম্বার',
+    online: 'অনলাইন',
+    accountDeleted: 'অ্যাকাউন্ট ডিলিট করা হয়েছে',
+    lastSeenHidden: 'শেষ দেখা লুকানো',
+    lastSeenAt: 'শেষ দেখা: {when}',
+    typingMulti: '{names} টাইপ করছে…',
+    someone: 'কেউ',
+    callOngoing: 'কল চলছে — জয়েন',
+    searchInChat: 'এই চ্যাটে সার্চ',
+    changeWallpaper: 'ওয়ালপেপার বদলান',
+    mute8h: 'মিউট ৮ ঘণ্টা',
+    disappOff: 'ডিসঅ্যাপিয়ারিং বন্ধ', disapp24: 'ডিসঅ্যাপিয়ারিং (২৪ ঘণ্টা)',
+    exportChat: 'চ্যাট এক্সপোর্ট',
+    groupInfo: 'গ্রুপ ইনফো', viewProfile: 'প্রোফাইল দেখুন',
+    pinnedLabel: 'পিন করা', nPinnedMsgs: '({n}টি মেসেজ)',
+    encryptedNotice: '🔒 এই চ্যাট এন্ড-টু-এন্ড এনক্রিপ্টেড। প্রথম মেসেজ পাঠিয়ে শুরু করুন।',
+    you: 'আপনি', guest: 'অতিথি',
+    chatDeletedToast: 'চ্যাট মুছে ফেলা হয়েছে',
+    blockedBar: 'আপনি @{name}-কে ব্লক করেছেন — মেসেজ পাঠাতে আনব্লক করুন',
+    unblock: 'আনব্লক',
+    unblockedToast: 'আনব্লক হয়েছে — এখন মেসেজ পাঠাতে পারেন',
+    // ── composer ──
+    writeMessage: 'মেসেজ লিখুন…',
+    recording: 'রেকর্ড হচ্ছে…', cancel: 'বাতিল', sendBtn: 'পাঠান',
+    photo: 'ছবি', video: 'ভিডিও', file2gb: 'ফাইল (2GB)',
+    stickerHint: 'স্টিকার পাঠাতে:', stickers: 'স্টিকার',
+    uploadFailed: 'আপলোড ব্যর্থ: {msg}',
+    micDenied: 'মাইক অ্যাক্সেস দেওয়া হয়নি',
+    maxSize2gb: 'সর্বোচ্চ 2GB ফাইল পাঠানো যাবে',
+    replyLabel: 'রিপ্লাই', disappModeOn: 'ডিসঅ্যাপিয়ারিং মোড চালু',
+    // 🔴🔵 ভয়েস দুই-মোড
+    voiceAutoHint: 'ভয়েস মেসেজ — ওপাশে অটো-প্লে হবে',
+    voiceNormalHint: 'ভয়েস মেসেজ — সাধারণ',
+    recordingAuto: 'রেকর্ড · ওপাশে অটো-প্লে হবে',
+    autoPlayTag: 'অটো',
+    // 🧡 লাইক-বাটন
+    likeBtnHint: 'ট্যাপে পাঠায় · লংপ্রেসে ইমোজি বদল',
+    likePickTitle: 'এই চ্যাটের লাইক-বাটন',
+    likeUpdatedToast: 'এই চ্যাটের লাইক-বাটন আপডেট হয়েছে',
+    likeResetToast: 'আপনার ডিফল্ট লাইক-ইমোজিতে ফিরে গেল',
+    likeResetDefault: 'ডিফল্টে ফেরাও',
+    likeBtnSetting: 'লাইক-বাটন ইমোজি',
+    likeBtnSettingSub: 'সব চ্যাটের ডিফল্ট — নির্দিষ্ট চ্যাটের জন্য প্রোফাইল-প্যানেল থেকে বদলান',
+    // 💬 হোভার-অ্যাকশন
+    reactBtn: 'রিয়্যাকশন', moreBtn: 'আরও',
+    // ── message bubble ──
+    forward: 'ফরওয়ার্ড', star: 'স্টার করো', unstar: 'স্টার সরাও',
+    pinUnpin: 'পিন/আনপিন', copyText: 'কপি টেক্সট', copied: 'কপি হয়েছে',
+    edit: 'এডিট', deleteMe: 'ডিলিট (শুধু আমার)',
+    deleteAll: 'ডিলিট ফর এভরিওয়ান', seenBy: 'কে দেখেছে',
+    editedTag: 'এডিট করা', forwardedTag: 'ফরওয়ার্ড করা',
+    mediaLoadFail: 'মিডিয়া লোড করা যায়নি', fileLabel: 'ফাইল', download: 'ডাউনলোড',
+    // ── dates / times ──
+    today: 'আজ', yesterday: 'গতকাল',
+    justNow: 'এইমাত্র', minAgo: '{n} মিনিট আগে', hourAgo: '{n} ঘণ্টা আগে',
+    longAgo: 'অনেক দিন আগে',
+    mute1d: '১ দিন', muteAlways: 'সবসময়',
+    // ── previews ──
+    pImage: '📷 ছবি', pVideo: '🎬 ভিডিও', pVoice: '🎤 ভয়েস মেসেজ',
+    pSticker: '🌟 স্টিকার', pGif: '🎞️ GIF', pCall: '📞 কল',
+    // ── modals ──
+    searchPh2: 'নাম, ফোন, ইমেইল বা মেসেজ সার্চ করুন…',
+    usersLabel: 'ইউজার', messagesLabel: 'মেসেজ', nothingFound: 'কিছু পাওয়া যায়নি',
+    newChatT: 'নতুন চ্যাট', dmChat: '১:১ চ্যাট', newGroup: 'নতুন গ্রুপ',
+    searchUserPh: 'ইউজারনেম / ফোন / ইমেইল সার্চ করুন…', groupNamePh: 'গ্রুপের নাম',
+    descOptional: 'বর্ণনা (ঐচ্ছিক)', memberLimit: 'মেম্বার লিমিট:',
+    addMembersPh: 'মেম্বার যোগ করতে সার্চ করুন…', createGroup: 'গ্রুপ তৈরি করুন',
+    nMembersSuffix: '({n} জন মেম্বার)',
+    orInvite: 'অথবা ইনভাইট লিংকে জয়েন', linkCodePh: 'লিংক কোড…', joinBtn: 'জয়েন',
+    reqSent: 'মেসেজ রিকোয়েস্ট পাঠানো হয়েছে — গ্রহণ করলে চ্যাট খুলবে',
+    reqSentShort: 'মেসেজ রিকোয়েস্ট পাঠানো হয়েছে',
+    groupInfoT: 'গ্রুপ ইনফো', membersLabel: 'মেম্বার',
+    owner: 'মালিক', admin: 'অ্যাডমিন', makeAdmin: 'অ্যাডমিন করুন', removeAdmin: 'অ্যাডমিন সরাও',
+    removeBtn: 'রিমুভ', inviteLinksLabel: 'ইনভাইট লিংক',
+    newInvite: 'নতুন ইনভাইট লিংক তৈরি',
+    inviteCopied: 'ইনভাইট লিংক কপি হয়েছে: {link}',
+    profileT: 'প্রোফাইল', sendMsgBtn: 'মেসেজ পাঠান',
+    blockBtn: 'ব্লক করুন', blockedToast: 'ব্লক করা হয়েছে — এখন কোনো মেসেজ আসবে না',
+    userDeleted: 'এই ইউজার অ্যাকাউন্ট ডিলিট করেছেন',
+    forwardT: 'ফরওয়ার্ড করুন', forwardedToast: 'ফরওয়ার্ড হয়েছে',
+    editMsgT: 'মেসেজ এডিট', saveBtn: 'সেভ',
+    deviceApprovalT: '🔐 নতুন ডিভাইস লগইন',
+    deviceApprovalBody: '<b>{name}</b> থেকে এইমাত্র আপনার অ্যাকাউন্টে লগইন হয়েছে।',
+    deviceApprovalHint: 'এটি আপনি না করে থাকলে Decline করুন — ওই ডিভাইসের সেশন সাথে সাথে বাতিল হয়ে সেখান থেকে লগআউট হয়ে যাবে।',
+    itWasMe: 'আমিই করেছি', declineLogout: 'Decline · লগআউট',
+    deviceLoggedOut: 'ওই ডিভাইস লগআউট করা হয়েছে',
+    failedRetry: 'ব্যর্থ হয়েছে — আবার চেষ্টা করুন',
+    requestsT: 'মেসেজ রিকোয়েস্ট', noRequests: 'কোনো রিকোয়েস্ট নেই',
+    seenByT: 'কে দেখেছে', nobodySeen: 'এখনো কেউ দেখেনি',
+    wallpaperT: 'চ্যাট ওয়ালপেপার',
+    wallpaperHint: 'ছবি আপলোড করুন অথবা কোনো ইমেজ-ইউআরএল দিন।',
+    uploadPhotoBtn: 'ছবি আপলোড', giveUrlBtn: 'ইউআরএল দিন',
+    urlPrompt: 'ওয়ালপেপার ইমেজ ইউআরএল:',
+    resetDefault: 'ডিফল্টে ফিরুন', wallpaperSetFail: 'ওয়ালপেপার সেট করা যায়নি',
+    confirmT: 'নিশ্চিত করুন', yesBtn: 'হ্যাঁ',
+    msgRejected: 'মেসেজ পাঠানো যায়নি — প্রাপক আপনাকে ব্লক করেছে বা রিকোয়েস্ট এখনো পেন্ডিং',
+    newReqToast: 'নতুন মেসেজ রিকোয়েস্ট এসেছে',
+    reqAcceptedToast: 'আপনার রিকোয়েস্ট গৃহীত হয়েছে',
+    // ── settings ──
+    profilePanelT: 'প্রোফাইল', privacyT: 'প্রাইভেসি', notificationsT: 'নোটিফিকেশন',
+    devicesT: 'ডিভাইস ও সেশন', blockedPanelT: 'ব্লকড ইউজার',
+    themePanelT: 'থিম', accountT: 'অ্যাকাউন্ট',
+    notifRowSub: 'সাউন্ড, পুশ',
+    privacyRowSub: 'মেসেজ পারমিশন, লাস্ট সিন',
+    devicesRowSub: 'অন্য ডিভাইস রিমোট লগআউট',
+    starredRow: 'স্টারড মেসেজ',
+    lightTheme: 'লাইট থিম', darkTheme: 'ডার্ক থিম',
+    deleteAccountRow: 'অ্যাকাউন্ট ডিলিট', deleteAccountSub: 'স্থায়ীভাবে সব মুছে যাবে',
+    logoutRow: 'লগআউট',
+    logoutConfirmB: 'এই ডিভাইস থেকে লগআউট হবেন?',
+    languageRow: 'ভাষা', languageSub: 'অ্যাপের ইন্টারফেস ভাষা',
+    english: 'English', bangla: 'বাংলা',
+    addAbout: 'About যোগ করুন…',
+    usernameFixed: 'ইউজারনেম (পরিবর্তনযোগ্য নয়)',
+    aboutBio: 'About / Bio', savedToast: 'সেভ হয়েছে',
+    whoCanDm: 'কে সরাসরি মেসেজ করতে পারবে',
+    whoCanDmHint: '"শুধু রিকোয়েস্ট" সিলেক্ট করলে সার্চ করে সরাসরি চ্যাট শুরু করা যাবে না — রিকোয়েস্ট পাঠাতে হবে।',
+    everyone: 'সবাই', requestOnly: 'শুধু রিকোয়েস্ট',
+    lastSeenWho: 'লাস্ট সিন কে দেখতে পাবে', nobody: 'কেউ না',
+    updatedToast: 'আপডেট হয়েছে',
+    e2eNote: '🔐 সব মেসেজ এন্ড-টু-এন্ড এনক্রিপ্টেড। সার্ভার শুধু এনক্রিপ্টেড ডেটা দেখে — আপনার প্রাইভেট কী কখনো ডিভাইসের বাইরে যায় না।',
+    soundRow: 'নোটিফিকেশন সাউন্ড', soundRowSub: 'নতুন মেসেজে পিং শব্দ',
+    pushRow: 'ব্রাউজার পুশ নোটিফিকেশন', pushRowSub: 'অ্যাপ বন্ধ থাকলেও ট্রে-তে আসবে',
+    enableBtn: 'চালু করুন', pushOnToast: 'পুশ চালু হয়েছে ✅', pushFailToast: 'পুশ চালু করা যায়নি',
+    perChatMuteHint: 'প্রতি-চ্যাট মিউট (৮ ঘণ্টা / ১ দিন / সবসময়) চ্যাট লিস্টে রাইট-ক্লিক করে পাওয়া যায়।',
+    thisDevice: '(এই ডিভাইস)', lastActive: 'সর্বশেষ সক্রিয়:',
+    revokedTag: 'রিভোকড', awaitingTag: 'অনুমোদনের অপেক্ষায়',
+    sessionClosed: 'সেশন বন্ধ করা হয়েছে', noDevices: 'কোনো ডিভাইস তথ্য নেই',
+    noBlocked: 'কেউ ব্লকড নেই',
+    avatarUpdated: 'প্রোফাইল ছবি আপডেট হয়েছে',
+    deleteWarn: '⚠️ অ্যাকাউন্ট ডিলিট করলে: প্রোফাইল, ইউজারনেম, এনক্রিপ্টেড কী-ব্যাকআপ সব মুছে যাবে। ১:১ চ্যাটে অন্যরা দেখবে "ব্যবহারকারী অ্যাকাউন্ট ডিলিট করেছেন"; গ্রুপ থেকে আপনি সরে যাবেন। এটি কখনোই ফেরত আনা যাবে না।',
+    confirmPassPh: 'পাসওয়ার্ড দিয়ে নিশ্চিত করুন',
+    permDelete: 'স্থায়ীভাবে অ্যাকাউন্ট ডিলিট করুন',
+    accountDeletedToast: 'অ্যাকাউন্ট মুছে ফেলা হয়েছে',
+    archivedT: 'আর্কাইভড চ্যাট', noArchived: 'কোনো আর্কাইভড চ্যাট নেই',
+    starredT: 'স্টারড মেসেজ', noStarred: 'কোনো স্টারড মেসেজ নেই',
+    starHint: 'মেসেজে রাইট-ক্লিক করে ⭐ স্টার করুন',
+    // ── calls ──
+    callT: 'কল',
+    voiceCallTag: '🔊 ভয়েস কল — এন্ড-টু-এন্ড এনক্রিপ্টেড মিডিয়া',
+    callNotStarted: 'কল শুরু করা যায়নি',
+    incomingCall: 'ইনকামিং কল…',
+    incomingVideoCall: 'ইনকামিং ভিডিও কল…',
+    acceptBtn: 'ধরুন', declineBtn: 'কেটে দিন',
+    callDeclinedToast: 'কল কেটে দেওয়া হয়েছে',
+    callEndedToast: 'কল শেষ হয়েছে',
+    callMissedToast: 'মিসড কল — কলার ক্যানসেল করেছে',
+    camUnavailableAudio: 'ক্যামেরা পাওয়া যায়নি — অডিও-নিয়েই কল চলছে',
+    noMicNoCam: 'মাইক/ক্যামেরা পাওয়া যায়নি — কল এদের ছাড়াই চলছে',
+    noSession: 'কল সেশন পাওয়া যায়নি',
+    callAutoHint: 'কল — ওপাশে অটো-ধরা হবে',
+    callNormalHint: 'কল — ওপাশে রিং বাজবে',
+    callAutoAnswered: '📞 ইনকামিং কল অটো-ধরা হয়েছে',
+    // 🎮 গেম-মোড (গ্রুপ কল)
+    gameModeBtn: 'গেম মোড',
+    gameInviteT: '{name} আপনাকে তাদের গেম-টিমে চাইছে',
+    gameTeamLabel: 'টিম',
+    gameEnterBtn: 'এন্টার',
+    gameDeclineBtn: 'বাতিল',
+    gameWaitingT: 'সতীর্থরা Enter চাপার অপেক্ষায়…',
+    gameWaitingHint: 'সবাই এন্টার দিলে টিম অ্যাকটিভ হবে',
+    gameActiveT: 'গেম মোড চালু — শুধু আপনার টিমের কথা শুনছেন',
+    gameExitBtn: 'বের হন',
+    gameSwitchBtn: 'টিম বদল',
+    gameEditTeamBtn: 'টিম এডিট',
+    gameInviteBtn: 'ইনভাইট ও এন্টার',
+    gameSelectHint: 'সতীর্থ বাছুন — শুধু তারাই আপনাকে শুনবে (আপনিও তাদের)। সবাই Enter চাপলে চালু হবে।',
+    gameNoOthers: 'কলে এখনো অন্য কেউ নেই',
+    // 🖱️ সাইডবার-রিসাইজ
+    resizeHint: 'টেনে ছোট/বড় করুন · ডাবল-ক্লিকে ডিফল্ট',
+    // 🔗 ইনভাইট
+    oneTimeTag: 'একবার ব্যবহারযোগ্য',
+    inviteUnused: 'অব্যবহৃত', inviteUsed: 'ব্যবহৃত',
+    // ── install banner ──
+    installBannerT: 'fcfc ইনস্টল করুন',
+    installBannerSub: 'দ্রুত, অফলাইন-রেডি, সরাসরি আপনার ডিভাইসে',
+    installBtn2: 'ইনস্টল',
+    neverShowAgain: 'আর দেখাবেন না',
+    installedToast: 'ইনস্টল হয়েছে 🎉',
+    installHintBrowser: 'ব্রাউজার মেনু → "অ্যাপ ইনস্টল" / "হোম স্ক্রিনে যোগ করুন"',
+    // ── misc ──
+    recentEmojis: 'সাম্প্রতিক',
+    msgNotFound: 'মেসেজ খুঁজে পাওয়া যায়নি',
+    // ── notifications ──
+    groupFallback: 'গ্রুপ', chatFallback: 'চ্যাট',
+    deletedAccount: 'ডিলিটেড অ্যাকাউন্ট',
+    encryptedMsgBody: '(এনক্রিপ্টেড মেসেজ)',
+    newEncryptedMsg: 'নতুন এনক্রিপ্টেড মেসেজ',
+    // ── 🍔 Telegram-স্টাইল হ্যামবার্গার মেনু ──
+    menuMyProfile: 'আমার প্রোফাইল',
+    menuSaved: 'সেভড মেসেজেস',
+    menuContacts: 'কন্টাক্টস',
+    menuMore: 'আরও',
+    menuNightMode: 'নাইট মোড',
+    contactsT: 'কন্টাক্টস',
+    noContacts: 'কোনো কন্টাক্ট নেই — নাম লিখে সার্চ করুন',
+    // ── 📌 Saved Messages (self-chat) ──
+    savedChatTitle: 'সেভড মেসেজেস',
+    savedSub: 'সেভ করতে এখানে মেসেজ ফরওয়ার্ড করুন',
+    savedHint: 'পরে খুঁজে পেতে যা চান সব সেভ রাখুন — নোট, লিংক, ফাইল',
+    // ── 📞 কল-হিস্ট্রি পিল ──
+    callIncoming: 'ইনকামিং',
+    callOutgoing: 'আউটগোয়িং',
+    callTypeCall: 'কল',
+    callTypeVideo: 'ভিডিও কল',
+    callCanceled: 'বাতিল করা কল',
+    callMissed: 'মিসড কল',
+    callDeclined: 'ডিক্লাইন করা কল',
+    durMin1: '{n} মিনিট',
+    durMinN: '{n} মিনিট',
+    durSec1: '{n} সেকেন্ড',
+    durSecN: '{n} সেকেন্ড',
+    callRinging: 'রিং হচ্ছে…',
+    callConnecting: 'কানেক্ট হচ্ছে…',
+    shareOnToast: 'আপনি স্ক্রিনশেয়ার করছেন',
+    groupExistsToast: 'এই নামে গ্রুপ আগেই আছে — খুলে দেওয়া হলো',
+  },
+}
+
+interface I18nState {
+  lang: Lang
+  setLang(l: Lang): void
+}
+
+function initialLang(): Lang {
+  try {
+    const v = localStorage.getItem('fcfc.lang')
+    if (v === 'en' || v === 'bn') return v
+  } catch {}
+  return 'en' // ডিফল্ট ইংরেজি
+}
+
+export const useI18n = create<I18nState>((set) => ({
+  lang: initialLang(),
+  setLang(l) {
+    try { localStorage.setItem('fcfc.lang', l) } catch {}
+    try { document.documentElement.lang = l === 'bn' ? 'bn' : 'en' } catch {}
+    set({ lang: l })
+  },
+}))
+
+export function t(key: string, vars?: Record<string, string | number>): string {
+  const lang = useI18n.getState().lang
+  let s = DICT[lang][key] ?? DICT.en[key] ?? key
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      s = s.split(`{${k}}`).join(String(v))
+    }
+  }
+  return s
+}
+
+// 🔒 HTML-সেফ ভ্যারিয়েন্ট — dangerouslySetInnerHTML-এ বসানোর জন্য।
+// টেমপ্লেটের নিজের ট্যাগ (<b>…) থাকে, আর ভ্যালু (ইউজার-দেওয়া নাম/ডিভাইস-নাম)
+// এস্কেপ হয়ে যায় — অ্যাটাকার ডিভাইস-নামে "<img onerror=…>" ঢুকিয়ে ভুক্তভাগীর
+// ডিভাইস-অ্যাপ্রুভাল মোডালে স্ক্রিপ্ট চালাতে পারত (XSS)।
+export function escapeHtml(s: string): string {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+}
+export function tHtml(key: string, vars?: Record<string, string | number>): string {
+  const lang = useI18n.getState().lang
+  let s = DICT[lang][key] ?? DICT.en[key] ?? key
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      s = s.split(`{${k}}`).join(escapeHtml(String(v)))
+    }
+  }
+  return s
+}
+
+// রিঅ্যাক্ট হুক — ভাষা বদলালে কম্পোনেন্ট রি-রেন্ডার হয়
+export function useT() {
+  const lang = useI18n((s) => s.lang)
+  return (key: string, vars?: Record<string, string | number>) => {
+    let s = DICT[lang][key] ?? DICT.en[key] ?? key
+    if (vars) {
+      for (const [k, v] of Object.entries(vars)) {
+        s = s.split(`{${k}}`).join(String(v))
+      }
+    }
+    return s
+  }
+}

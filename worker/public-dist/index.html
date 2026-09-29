@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- interactive-widget=resizes-content → Android-এ কীবোর্ড ওঠার সাথে
+         সাথেই লেআউট-ভিউপোর্ট সংকুচিত হয় — সেন্ড-বাটন/কম্পোজার কীবোর্ডের
+         নিচে চাপা পড়ে না। iOS-এর জন্য main.tsx-এ visualViewport-সিঙ্ক আছে। -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <!-- থিম-কালার JS-এ অ্যাপ-থিম অনুযায়ী বদলায় (dark → #0e1220, light → #ffffff);
+         নিচের media-ভার্সনগুলো ফলব্যাক — সিস্টেম-প্রেফারেন্স অনুযায়ী। -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0e1220" />
+    <meta name="description" content="fcfc — fast, secure, end-to-end encrypted chat" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="fcfc" />
+    <title>fcfc</title>
+    <script type="module" crossorigin src="/assets/index-Cgafc736.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/motion-Vh3WiYKP.js">
+    <link rel="modulepreload" crossorigin href="/assets/react-n_Mwl-MS.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DdZNd7fe.css">
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>

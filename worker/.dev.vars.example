@@ -1,0 +1,9 @@
+# wrangler dev-এর জন্য লোকাল সিক্রেট — এই ফাইলটি `.dev.vars` নামে কপি করুন
+JWT_SECRET=change-me-long-random-string
+REFRESH_PEPPER=change-me-another-random-string
+VAPID_PUBLIC_KEY=base64url-uncompressed-p256-point
+VAPID_PRIVATE_KEY=base64url-jwk-d-scalar
+PUSH_CONTACT=mailto:you@example.com
+# Serverless SFU অ্যাপের App Secret (অ্যাপ বানানোর সময়ে দেখানো ৬৪-অক্ষরের hex,
+# "Create API Token" টোকেন নয়) — wrangler.toml [vars]-এ CALLS_APP_ID-ও লাগবে
+CALLS_API_TOKEN=your-sfu-app-secret-64-hex-chars

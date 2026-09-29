@@ -1,0 +1,725 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bubble-out: #e3efff;
+  --bubble-in: #ffffff;
+  --chat-bg: radial-gradient(circle at 20% 20%, #dbe7ff 0%, transparent 40%),
+             radial-gradient(circle at 80% 30%, #e8e0ff 0%, transparent 45%),
+             radial-gradient(circle at 50% 80%, #d7f0ff 0%, transparent 45%),
+             #e9eef6;
+}
+.dark {
+  --bubble-out: #2b3a67;
+  --bubble-in: #1c2333;
+  --chat-bg: radial-gradient(circle at 20% 20%, #1b2547 0%, transparent 40%),
+             radial-gradient(circle at 80% 30%, #241b47 0%, transparent 45%),
+             radial-gradient(circle at 50% 80%, #14303f 0%, transparent 45%),
+             #0e1220;
+}
+
+html, body, #root { height: 100%; }
+body {
+  @apply bg-slate-100 text-slate-900 antialiased overflow-hidden;
+  font-feature-settings: 'cv02', 'cv11';
+}
+/* ⚠️ @apply-এর ভেতরের dark:bg-[#0b0f1a] কখনোই জেনারেট হতো না (arbitrary
+   value + variant + @apply কম্বিনেশনে Tailwind চুপচাপ ক্লাস বাদ দেয়) —
+   ডার্ক মোডে body-র ব্যাকগ্রাউন্ড লাইটই থেকে যেত। স্পষ্ট CSS-এ লিখলাম। */
+html.dark body {
+  background-color: #0b0f1a;
+  color: #f1f5f9;
+}
+
+/* চ্যাট-এরিয়া এখন স্বচ্ছ — পেছনের TWallpaper অ্যানিমেটেড ওয়ালপেপার
+   দেখা যায় (টেলিগ্রামের মতো)। .chat-bg শুধু ফলব্যাক: ওয়ালপেপার-লোড
+   ব্যর্থ হলে পুরনো গ্রেডিয়েন্ট থেকে যায় (বুট/অথ-স্ক্রিনেও এটাই)। */
+.chat-bg { background: var(--chat-bg); }
+.wallpaper-cover { background-size: cover; background-position: center; }
+
+/* TWallpaper কন্টেইনার — অ্যাপ-শেলের রাউন্ডেড কোণায় ক্লিপ হয় */
+#root .tw-wrap { border-radius: inherit; }
+
+/* ⚠️ ওয়ালপেপার-বাগের আসল ফিক্স — CDN-এর .tw-wrap { position:fixed;
+   z-index:-1 } Tailwind-এর absolute/z-0 কে চুপচাপ মারত (CDN stylesheet
+   পরে লোড হয়, একই specificity) → ওয়ালপেপার অ্যাপের অস্বচ্ছ ব্যাকগ্রাউন্ডের
+   পেছনে চলে যেত, কিছুই দেখা যেত না। id-selector (1-1-0) দিয়ে জোর করে
+   কন্টেইনারের ভেতরে absolute + z-0 করা হলো — এখন চ্যাট-এরিয়ায়
+   অ্যানিমেটেড ওয়ালপেপার দেখা যায় (abc.html-এর মতো)। */
+#fcfc-wallpaper.tw-wrap {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+/* ── গ্লাসমরফিজম (টেলিগ্রাম-স্টাইল মেনু/বার/পপওভার) ── */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 8px 32px rgba(15, 23, 42, 0.14), inset 0 1px 0 rgba(255,255,255,.35);
+}
+.dark .glass {
+  background: rgba(24, 25, 30, 0.74);
+  border-color: rgba(255, 255, 255, 0.09);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255,255,255,.05);
+}
+/* বার-টাইপ গ্লাস (হেডার/পিনড-বার) — সাইড বর্ডার ছাড়া */
+.glass-bar {
+  background: rgba(255, 255, 255, 0.64);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  backdrop-filter: blur(18px) saturate(1.5);
+}
+.dark .glass-bar { background: rgba(23, 24, 26, 0.74); }
+
+/* রিপ্লাই-জাম্প ব্লিংক — রেফারেন্স মেসেজে স্ক্রল করে হাইলাইট (টেলিগ্রাম) */
+.msg-blink { animation: msg-blink 1.7s cubic-bezier(.25,.9,.3,1); }
+@keyframes msg-blink {
+  0% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0); background-color: rgba(124, 58, 237, 0); }
+  18% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.55); background-color: rgba(124, 58, 237, 0.22); }
+  55% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.35); background-color: rgba(124, 58, 237, 0.14); }
+  100% { box-shadow: 0 0 0 3px rgba(124, 58, 237, 0); background-color: rgba(124, 58, 237, 0); }
+}
+
+/* কম্পোজারের contentEditable ইনপুটের ইমোজি-আর্টওয়ার্ক <img> */
+.ce-emoji {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  vertical-align: -0.24em;
+  margin: 0 1px;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+.ce-input { min-height: 42px; }
+
+/* স্টিকার-পপ — বড় ইমোজি-আর্টওয়ার্ক স্টিকারের নার্ভাস এন্ট্রি */
+.sticker-pop { animation: sticker-pop .38s cubic-bezier(.2, 1.2, .3, 1.15); }
+@keyframes sticker-pop {
+  0% { transform: scale(.4) rotate(-6deg); opacity: 0; }
+  100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* একক-ইমোজি মেসেজ (৫x) — টেলিগ্রাম-স্টাইল এক-শট bounce:
+   একবার প্লে হয়ে থেমে যায় (loop নেই), ক্লিকে key-বদলে আবার ১-বার।
+   ইমোজি artwork একই থাকে — শুধু মোশন-ইফেক্ট যোগ হয়। */
+.solo-emoji-play { animation: solo-emoji-play .58s cubic-bezier(.25, 1.25, .35, 1) both; transform-origin: center; will-change: transform; }
+@keyframes solo-emoji-play {
+  0%   { transform: scale(0) rotate(-28deg); opacity: 0; }
+  42%  { transform: scale(1.22) rotate(7deg); opacity: 1; }
+  62%  { transform: scale(.92) rotate(-4deg); }
+  80%  { transform: scale(1.07) rotate(2deg); }
+  100% { transform: scale(1) rotate(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .solo-emoji-play { animation: none; }
+}
+
+/* scrollbars */
+* { scrollbar-width: thin; scrollbar-color: rgba(120,130,160,.35) transparent; }
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-thumb { background: rgba(120,130,160,.35); border-radius: 3px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+.msg-enter { animation: pop-in .2s cubic-bezier(.2,.9,.3,1.3); }
+
+a.msg-link { @apply text-brand-600 dark:text-brand-300 underline underline-offset-2 break-all; }
+
+input:focus, textarea:focus, button:focus { outline: none; }
+
+/* ── ট্যাপ-অ্যান্ড-হোল্ড টেক্সট-সিলেকশন বন্ধ (Telegram-style) ──
+   মোবাইলে চ্যাট-লিস্টে লং-প্রেস করলে ব্রাউজারের কলআউট আর আসে না —
+   বরং অ্যাপের নিজের কনটেক্সট মেনু খোলে।
+   🆕 কিন্তু মেসেজ-বডির টেক্সট এখন সিলেক্টেবল (.msg-body) — টেলিগ্রামের
+   মতোই: মেসেজে টেক্সট টিপে ধরে/ড্র্যাগ করে সিলেক্ট + কপি করা যায়।
+   ইনপুট/টেক্সটএরিয়া আগের মতোই সিলেক্টেবল; ডাবল-ট্যাপ জুম বন্ধ থাকে। */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  touch-action: manipulation;
+}
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+/* মেসেজ-বাবলের ভেতরের টেক্সট — সিলেক্টযোগ্য */
+.msg-body {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+.msg-body img, .msg-body .ce-emoji { -webkit-user-select: none; user-select: none; }
+
+.skeleton {
+  background: linear-gradient(90deg, rgba(150,160,190,.12) 25%, rgba(150,160,190,.28) 37%, rgba(150,160,190,.12) 63%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+/* ইনকামিং-কল রিং পালস */
+.ring-pulse::after {
+  content: '';
+  position: absolute;
+  inset: -14px;
+  border-radius: 9999px;
+  border: 3px solid rgba(16, 185, 129, 0.5);
+  animation: ring-pulse 1.6s ease-out infinite;
+}
+@keyframes ring-pulse {
+  0% { transform: scale(0.9); opacity: 1; }
+  100% { transform: scale(1.35); opacity: 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   💧 LIQUID GLASS MENU — রেফারেন্স-ডিজাইন (qu.ax/dsP2u, SlcUY,
+   HJQ08, JRaPN) হুবহু: ফ্রস্টেড-গ্লাস + ঘূর্ণায়মান রেইনবো-রিম +
+   গ্লাইডিং পিল-হাইলাইট + কার্সার-লাইট + রিপল + jelly-in।
+   ══════════════════════════════════════════════════════════════════ */
+@property --lg-ang { syntax: '<angle>'; inherits: false; initial-value: 300deg; }
+
+.lgm {
+  position: relative;
+  isolation: isolate;
+  border-radius: 22px;
+  padding: 6px 0;
+  min-width: 224px;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 24px));
+
+  /* বেস ফ্রস্টেড গ্লাস */
+  background: linear-gradient(135deg, rgba(255,255,255,.76) 0%, rgba(255,255,255,.52) 55%, rgba(255,255,255,.64) 100%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) brightness(1.06);
+  backdrop-filter: blur(32px) saturate(190%) brightness(1.06);
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow:
+    0 22px 54px rgba(28,36,80,.24),
+    0 4px 12px rgba(28,36,80,.08),
+    inset 0 1.5px 1px rgba(255,255,255,.95),
+    inset 0 -1px 2px rgba(255,255,255,.45),
+    inset 0 0 22px rgba(255,255,255,.25);
+  animation: lgm-jelly-in .8s cubic-bezier(.2,.8,.3,1);
+}
+/* squash & stretch — জেলি-ড্রপ বসে যাওয়া */
+@keyframes lgm-jelly-in {
+  0%   { transform: scale(.4, .28) translateY(-8px); }
+  40%  { transform: scale(1.06, 1.07); }
+  62%  { transform: scale(.97, .975); }
+  80%  { transform: scale(1.012, 1.01); }
+  100% { transform: none; }
+}
+/* ঘূর্ণায়মান iridescent রিম-লাইট */
+.lgm::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px;
+  background: conic-gradient(from var(--lg-ang, 300deg),
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0) 16%,
+    rgba(150,190,255,.65) 36%,
+    rgba(255,255,255,0) 54%,
+    rgba(255,175,215,.6) 76%,
+    rgba(255,255,255,1) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none; z-index: 2;
+  animation: lgm-rim-spin 9s linear infinite;
+}
+@keyframes lgm-rim-spin { from { --lg-ang: 0deg; } to { --lg-ang: 360deg; } }
+/* আঙুল/কার্সার অনুসরণকারী আলোর দাগ */
+.lgm::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background:
+    radial-gradient(150px circle at var(--lg-mx, 30px) var(--lg-my, 10px), rgba(255,255,255,.7), rgba(255,255,255,0) 70%),
+    radial-gradient(130% 60% at 0% 0%, rgba(255,255,255,.35), rgba(255,255,255,0) 60%);
+  pointer-events: none; z-index: 0;
+}
+
+/* ডার্ক-মোড ভ্যারিয়েন্ট — একই গ্লাস-স্ট্রাকচার, ডার্ক টিন্ট */
+.dark .lgm {
+  background: linear-gradient(135deg, rgba(34,38,48,.78) 0%, rgba(22,25,32,.6) 55%, rgba(30,34,42,.68) 100%);
+  border-color: rgba(255,255,255,.14);
+  box-shadow:
+    0 22px 54px rgba(0,0,0,.5),
+    0 4px 12px rgba(0,0,0,.3),
+    inset 0 1.5px 1px rgba(255,255,255,.18),
+    inset 0 -1px 2px rgba(255,255,255,.07),
+    inset 0 0 22px rgba(255,255,255,.04);
+}
+.dark .lgm::after {
+  background:
+    radial-gradient(150px circle at var(--lg-mx, 30px) var(--lg-my, 10px), rgba(255,255,255,.14), rgba(255,255,255,0) 70%),
+    radial-gradient(130% 60% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,0) 60%);
+}
+
+/* আইটেম-সারি */
+.lgm-item {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 16px;
+  width: calc(100% - 12px); height: 42px; margin: 0 6px; padding: 0 12px;
+  border: 0; background: transparent; border-radius: 14px; overflow: hidden;
+  font: 500 15.5px Roboto, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: #1b1e23;
+  text-align: left; white-space: nowrap; cursor: pointer; outline: none;
+  animation: lgm-item-in .5s cubic-bezier(.2,.9,.25,1.15) backwards;
+  animation-delay: calc(var(--i) * 32ms + 110ms);
+}
+@keyframes lgm-item-in { from { opacity: 0; transform: translateY(-9px) scale(.96); } }
+.lgm-item svg { flex: none; width: 22px; height: 22px; color: #22262d; }
+.lgm-item .lgm-label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.lgm-item .lgm-chev { width: 18px; height: 18px; color: #4a4f57; }
+.lgm-item.danger, .lgm-item.danger svg { color: #e5383b; }
+.dark .lgm-item { color: #eceef2; }
+.dark .lgm-item svg { color: #c3c9d4; }
+.dark .lgm-item .lgm-chev { color: #9aa1ac; }
+.dark .lgm-item.danger, .dark .lgm-item.danger svg { color: #ff6b6e; }
+.lgm-item:focus-visible { outline: 2px solid #6d8cff; outline-offset: -2px; }
+
+/* অ্যাকাউন্ট-হেডার সারি (একটু লম্বা) */
+.lgm-item.account { height: 46px; }
+
+/* গ্লাইডিং গ্লাস-পিল — আইটেমের মাঝে ভেসে বেড়ায় */
+.lgm-hl {
+  position: absolute; left: 0; top: 0; width: 0; height: 0; z-index: 1;
+  border-radius: 14px; pointer-events: none; opacity: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,.8), rgba(255,255,255,.42));
+  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 0 rgba(255,255,255,.55), 0 5px 16px rgba(28,36,80,.12);
+  transition: transform .55s cubic-bezier(.34,1.5,.5,1), width .3s ease, height .3s ease, opacity .2s ease, scale .2s cubic-bezier(.2,.9,.25,1.15);
+}
+.lgm-hl.on { opacity: 1; }
+.lgm-hl.no-anim { transition: none; }
+.lgm-hl.press { scale: .97 .9; }
+.dark .lgm-hl {
+  background: linear-gradient(180deg, rgba(255,255,255,.14), rgba(255,255,255,.05));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.2), inset 0 -1px 0 rgba(255,255,255,.08), 0 5px 16px rgba(0,0,0,.35);
+}
+
+/* ডিভাইডার */
+.lgm-divider {
+  position: relative; z-index: 1; height: 1px; margin: 4px 0;
+  background: rgba(20,22,26,.09); box-shadow: 0 1px 0 rgba(255,255,255,.6);
+}
+.dark .lgm-divider { background: rgba(255,255,255,.12); box-shadow: 0 1px 0 rgba(255,255,255,.06); }
+
+/* ট্যাপে তরল-রিপল */
+.lgm-ripple {
+  position: absolute; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.95), rgba(255,255,255,0) 70%);
+  pointer-events: none; transform: scale(0); opacity: .9;
+  animation: lgm-ripple .7s ease-out forwards;
+}
+.dark .lgm-ripple { background: radial-gradient(circle, rgba(255,255,255,.35), rgba(255,255,255,0) 70%); }
+@keyframes lgm-ripple { to { transform: scale(2.2); opacity: 0; } }
+
+/* হ্যামবার্গার-মেনুর বোতাম-পপ (রেফারেন্সের burger-pop) */
+.lgm-pop { animation: lgm-burger-pop .55s cubic-bezier(.3,.7,.3,1); }
+@keyframes lgm-burger-pop {
+  0%   { transform: scale(1); }
+  25%  { transform: scale(1.14, .88); }
+  55%  { transform: scale(.94, 1.08); }
+  80%  { transform: scale(1.03, .98); }
+  100% { transform: scale(1); }
+}
+
+/* রিয়্যাকশন-স্ট্রিপও একই গ্লাস (ref1-এর rbar) */
+.lgm-rbar {
+  position: relative; isolation: isolate;
+  border-radius: 28px; padding: 6px;
+  background: linear-gradient(135deg, rgba(255,255,255,.76) 0%, rgba(255,255,255,.52) 55%, rgba(255,255,255,.64) 100%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) brightness(1.06);
+  backdrop-filter: blur(32px) saturate(190%) brightness(1.06);
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow: 0 22px 54px rgba(28,36,80,.24), 0 4px 12px rgba(28,36,80,.08),
+    inset 0 1.5px 1px rgba(255,255,255,.95), inset 0 -1px 2px rgba(255,255,255,.45);
+  animation: lgm-jelly-in .8s cubic-bezier(.2,.8,.3,1);
+}
+.dark .lgm-rbar {
+  background: linear-gradient(135deg, rgba(34,38,48,.78) 0%, rgba(22,25,32,.6) 55%, rgba(30,34,42,.68) 100%);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 22px 54px rgba(0,0,0,.5), 0 4px 12px rgba(0,0,0,.3),
+    inset 0 1.5px 1px rgba(255,255,255,.18), inset 0 -1px 2px rgba(255,255,255,.07);
+}
+
+/* More-সাব-মেনু — মেনুর ভেতরেই খোলে (নাইট-মোড/আর্কাইভ/লগ-আউট) */
+.lgm-sub { position: relative; z-index: 1; overflow: hidden; }
+.lgm-sub-inner { display: flex; flex-direction: column; gap: 2px; padding: 2px 0 4px; }
+
+/* ── গ্লাস-চিপ (বার্গার + সার্চ) — রেফারেন্সের glass-chip হুবহু ── */
+.lgm-chip {
+  background: rgba(255,255,255,.72);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255,255,255,.9);
+  box-shadow: 0 2px 12px rgba(20,30,60,.10), inset 0 1px 0 #fff, inset 0 -1px 1px rgba(255,255,255,.6);
+}
+.dark .lgm-chip {
+  background: rgba(30,33,40,.72);
+  border-color: rgba(255,255,255,.12);
+  box-shadow: 0 2px 12px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12), inset 0 -1px 1px rgba(255,255,255,.05);
+}
+
+/* ── বার্গার → X মরফ (রেফারেন্সের .burger span-গুলো) ── */
+.lgm-burger { display: grid; place-items: center; grid-template-columns: auto; }
+.lgm-burger span {
+  grid-area: 1 / 1; width: 18px; height: 2px; border-radius: 2px; background: #2b2f36;
+  transition: transform .4s cubic-bezier(.2,.9,.25,1.15), opacity .2s ease;
+}
+.dark .lgm-burger span { background: #d5d9e0; }
+.lgm-burger span:nth-child(1) { transform: translateY(-6px); }
+.lgm-burger span:nth-child(3) { transform: translateY(6px); }
+.lgm-burger.open span:nth-child(1) { transform: rotate(45deg); }
+.lgm-burger.open span:nth-child(2) { opacity: 0; transform: scaleX(.2); }
+.lgm-burger.open span:nth-child(3) { transform: rotate(-45deg); }
+
+/* ── Chromium-রিফ্র্যাকশন (রেফারেন্সের .refract) — SVG displacement দিয়ে
+   আসল কাচের মতো আলো বাঁকানো। JS শুধু Chrome/Edge/Opera-তে --lg সেট করে +
+   html-এ .refract বসায়; বাকি ব্রাউজার সাধারণ ফ্রস্টেড-গ্লাসেই থাকে ── */
+html.refract .lgm {
+  background: linear-gradient(135deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.40) 55%, rgba(255,255,255,.52) 100%);
+  -webkit-backdrop-filter: var(--lg,) blur(13px) saturate(190%) brightness(1.08);
+  backdrop-filter: var(--lg,) blur(13px) saturate(190%) brightness(1.08);
+}
+html.refract .lgm-rbar {
+  background: linear-gradient(135deg, rgba(255,255,255,.62) 0%, rgba(255,255,255,.40) 55%, rgba(255,255,255,.52) 100%);
+  -webkit-backdrop-filter: var(--lg,) blur(13px) saturate(190%) brightness(1.08);
+  backdrop-filter: var(--lg,) blur(13px) saturate(190%) brightness(1.08);
+}
+html.refract .lgm-chip {
+  background: rgba(255,255,255,.48);
+  -webkit-backdrop-filter: var(--lg,) blur(3px) saturate(180%) brightness(1.08);
+  backdrop-filter: var(--lg,) blur(3px) saturate(180%) brightness(1.08);
+}
+html.refract.dark .lgm,
+html.refract.dark .lgm-rbar {
+  background: linear-gradient(135deg, rgba(34,38,48,.62) 0%, rgba(22,25,32,.44) 55%, rgba(30,34,42,.52) 100%);
+  -webkit-backdrop-filter: var(--lg,) blur(13px) saturate(170%) brightness(1.05);
+  backdrop-filter: var(--lg,) blur(13px) saturate(170%) brightness(1.05);
+}
+html.refract.dark .lgm-chip {
+  background: rgba(30,33,40,.55);
+  -webkit-backdrop-filter: var(--lg,) blur(3px) saturate(160%) brightness(1.05);
+  backdrop-filter: var(--lg,) blur(3px) saturate(160%) brightness(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lgm, .lgm-item, .lgm::before, .lgm-ripple, .lgm-rbar, .lgm-pop { animation-duration: .01s !important; animation-delay: 0s !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   💧 LIQUID GLASS — পুরো-অ্যাপ এক্সটেনশন (login/signup + সাধারণ UI)
+   মেনু-ডিজাইন-সিস্টেমের (.lgm) একই রেসিপি: ফ্রস্টেড কাচ + ঘূর্ণায়মান
+   রেইনবো-রিম + কার্সার-লাইট + রিপল + jelly। বড় কার্ড/ইনপুট/বাটন/
+   নাম্প্যাড-কী এই লেয়ারে।
+   ══════════════════════════════════════════════════════════════════ */
+
+/* ── বড় লিকুইড-গ্লাস কার্ড (অথ-কার্ড, মডাল-বডি) ── */
+.lg-card {
+  position: relative;
+  isolation: isolate;
+  border-radius: 30px;
+  background: linear-gradient(135deg, rgba(255,255,255,.78) 0%, rgba(255,255,255,.5) 55%, rgba(255,255,255,.62) 100%);
+  -webkit-backdrop-filter: blur(32px) saturate(190%) brightness(1.06);
+  backdrop-filter: blur(32px) saturate(190%) brightness(1.06);
+  border: 1px solid rgba(255,255,255,.55);
+  box-shadow:
+    0 28px 70px rgba(28,36,80,.28),
+    0 6px 18px rgba(28,36,80,.1),
+    inset 0 1.5px 1px rgba(255,255,255,.95),
+    inset 0 -1px 2px rgba(255,255,255,.45),
+    inset 0 0 26px rgba(255,255,255,.25);
+  animation: lg-card-in .7s cubic-bezier(.2,.85,.3,1.08);
+}
+@keyframes lg-card-in {
+  0%   { transform: translateY(18px) scale(.94); opacity: 0; }
+  55%  { transform: translateY(-4px) scale(1.012); opacity: 1; }
+  100% { transform: none; opacity: 1; }
+}
+/* ঘূর্ণায়মান রেইনবো-রিম — .lgm::before-এর মতোই */
+.lg-card::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.6px;
+  background: conic-gradient(from var(--lg-ang, 300deg),
+    rgba(255,255,255,1) 0%,
+    rgba(255,255,255,0) 16%,
+    rgba(150,190,255,.65) 36%,
+    rgba(255,255,255,0) 54%,
+    rgba(255,175,215,.6) 76%,
+    rgba(255,255,255,1) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none; z-index: 2;
+  animation: lgm-rim-spin 9s linear infinite;
+}
+/* কার্সার-লাইট */
+.lg-card::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit;
+  background:
+    radial-gradient(220px circle at var(--lg-mx, 40px) var(--lg-my, 30px), rgba(255,255,255,.5), rgba(255,255,255,0) 70%),
+    radial-gradient(130% 60% at 0% 0%, rgba(255,255,255,.3), rgba(255,255,255,0) 60%);
+  pointer-events: none; z-index: 0;
+}
+.dark .lg-card {
+  background: linear-gradient(135deg, rgba(34,38,48,.8) 0%, rgba(22,25,32,.6) 55%, rgba(30,34,42,.7) 100%);
+  border-color: rgba(255,255,255,.14);
+  box-shadow:
+    0 28px 70px rgba(0,0,0,.55),
+    0 6px 18px rgba(0,0,0,.32),
+    inset 0 1.5px 1px rgba(255,255,255,.18),
+    inset 0 -1px 2px rgba(255,255,255,.07),
+    inset 0 0 26px rgba(255,255,255,.04);
+}
+.dark .lg-card::after {
+  background:
+    radial-gradient(220px circle at var(--lg-mx, 40px) var(--lg-my, 30px), rgba(255,255,255,.12), rgba(255,255,255,0) 70%),
+    radial-gradient(130% 60% at 0% 0%, rgba(255,255,255,.07), rgba(255,255,255,0) 60%);
+}
+
+/* ── গ্লাস ইনপুট ── */
+.lg-input {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.55);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid rgba(255,255,255,.85);
+  box-shadow: 0 2px 10px rgba(20,30,60,.08), inset 0 1px 0 rgba(255,255,255,.9);
+  color: #1b1e23;
+  font: 500 16px inherit;
+  transition: border-color .25s, box-shadow .25s, background .25s;
+  outline: none;
+}
+.lg-input::placeholder { color: rgba(100,110,130,.6); }
+.lg-input:focus {
+  border-color: rgba(124,132,255,.75);
+  box-shadow: 0 4px 18px rgba(99,102,241,.18), inset 0 1px 0 #fff;
+  background: rgba(255,255,255,.72);
+}
+.dark .lg-input {
+  background: rgba(30,33,40,.6);
+  border-color: rgba(255,255,255,.12);
+  color: #eceef2;
+  box-shadow: 0 2px 10px rgba(0,0,0,.3), inset 0 1px 0 rgba(255,255,255,.1);
+}
+.dark .lg-input::placeholder { color: rgba(150,160,180,.55); }
+.dark .lg-input:focus { border-color: rgba(124,132,255,.6); }
+
+/* ── গ্লাইডিং-পিল নেভ (login/signup মেথড-সুইচ) ── */
+.lg-nav {
+  position: relative;
+  display: flex;
+  padding: 5px;
+  border-radius: 18px;
+  background: rgba(255,255,255,.42);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255,255,255,.7);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+}
+.dark .lg-nav {
+  background: rgba(20,22,28,.5);
+  border-color: rgba(255,255,255,.1);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+.lg-nav-pill {
+  position: absolute; top: 5px; bottom: 5px; z-index: 0;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255,255,255,.92), rgba(255,255,255,.6));
+  box-shadow: 0 4px 14px rgba(28,36,80,.16), inset 0 1px 0 #fff;
+  transition: transform .45s cubic-bezier(.3,1.4,.4,1), width .45s cubic-bezier(.3,1.4,.4,1);
+}
+.dark .lg-nav-pill {
+  background: linear-gradient(180deg, rgba(255,255,255,.2), rgba(255,255,255,.08));
+  box-shadow: 0 4px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.2);
+}
+.lg-nav button {
+  position: relative; z-index: 1;
+  flex: 1; padding: 9px 8px;
+  font: 600 14.5px inherit;
+  color: #6a7180;
+  border-radius: 14px;
+  transition: color .3s;
+  white-space: nowrap;
+}
+.lg-nav button.on { color: #1b1e23; }
+.dark .lg-nav button { color: #8a93a5; }
+.dark .lg-nav button.on { color: #fff; }
+
+/* ── প্রাইমারি লিকুইড বাটন ── */
+.lg-btn {
+  position: relative; overflow: hidden;
+  width: 100%; padding: 13px 18px;
+  border-radius: 17px;
+  font: 700 15.5px inherit;
+  color: #fff;
+  background: linear-gradient(135deg, #7c5cff 0%, #6366f1 45%, #8b5cf6 100%);
+  box-shadow:
+    0 10px 26px rgba(99,102,241,.42),
+    0 3px 8px rgba(99,102,241,.28),
+    inset 0 1.5px 0 rgba(255,255,255,.5),
+    inset 0 -2px 4px rgba(0,0,20,.18);
+  border: 1px solid rgba(255,255,255,.25);
+  transition: transform .18s cubic-bezier(.2,.9,.3,1.4), box-shadow .25s, filter .25s;
+}
+.lg-btn:hover:not(:disabled) { filter: brightness(1.06) saturate(1.08); box-shadow: 0 13px 32px rgba(99,102,241,.5), inset 0 1.5px 0 rgba(255,255,255,.55); }
+.lg-btn:active:not(:disabled) { transform: scale(.965); }
+.lg-btn:disabled { opacity: .45; box-shadow: 0 4px 10px rgba(99,102,241,.18); }
+/* বাটনেরও একটা ধীর-ঘোরা রিম */
+.lg-btn::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1.4px;
+  background: conic-gradient(from var(--lg-ang, 300deg),
+    rgba(255,255,255,.9) 0%, rgba(255,255,255,0) 22%,
+    rgba(180,200,255,.7) 42%, rgba(255,255,255,0) 58%,
+    rgba(255,190,225,.6) 78%, rgba(255,255,255,.9) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  pointer-events: none;
+  animation: lgm-rim-spin 9s linear infinite;
+}
+
+/* ── সেকেন্ডারি (গোস্ট) বাটন ── */
+.lg-btn-ghost {
+  padding: 11px 16px;
+  border-radius: 15px;
+  font: 600 14.5px inherit;
+  color: #4a5262;
+  background: rgba(255,255,255,.5);
+  -webkit-backdrop-filter: blur(10px) saturate(150%);
+  backdrop-filter: blur(10px) saturate(150%);
+  border: 1px solid rgba(255,255,255,.8);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8), 0 2px 8px rgba(20,30,60,.08);
+  transition: transform .18s cubic-bezier(.2,.9,.3,1.4), background .25s;
+}
+.lg-btn-ghost:active { transform: scale(.96); }
+.dark .lg-btn-ghost {
+  color: #c3c9d4;
+  background: rgba(30,33,40,.55);
+  border-color: rgba(255,255,255,.12);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+/* ── নাম্প্যাড-কী (iPhone লকস্ক্রিন) ── */
+.lg-key {
+  width: 72px; height: 72px; max-width: calc(33vw - 14px); max-height: calc(33vw - 14px);
+  border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  color: #1b1e23;
+  background: rgba(255,255,255,.52);
+  -webkit-backdrop-filter: blur(16px) saturate(170%);
+  backdrop-filter: blur(16px) saturate(170%);
+  border: 1px solid rgba(255,255,255,.85);
+  box-shadow:
+    0 6px 16px rgba(20,30,60,.12),
+    inset 0 1.5px 0 rgba(255,255,255,.95),
+    inset 0 -2px 4px rgba(255,255,255,.35);
+  transition: background .2s, transform .15s cubic-bezier(.2,.9,.3,1.4), box-shadow .2s;
+  user-select: none; -webkit-user-select: none; touch-action: manipulation;
+}
+.lg-key:active {
+  background: rgba(255,255,255,.85);
+  box-shadow: 0 2px 8px rgba(20,30,60,.1), inset 0 1.5px 0 #fff;
+}
+.lg-key-alt { background: rgba(255,255,255,.3); box-shadow: inset 0 1px 0 rgba(255,255,255,.6); }
+.lg-key-alt:active { background: rgba(255,255,255,.6); }
+
+/* ⌨ কীবোর্ড-টাইপ হিন্ট — শুধু মাউস+ফিজিক্যাল-কীবোর্ড ডিভাইসে (ল্যাপটপ/ডেস্কটপ) দেখায়,
+   ফোন/টাচ-ডিভাইসে লুকানো থাকে (ওখানে কাস্টম নাম্প্যাড-ই একমাত্র ইনপুট) */
+.lg-kbd-hint { display: none; letter-spacing: .3px; }
+@media (hover: hover) and (pointer: fine) {
+  .lg-kbd-hint { display: inline; opacity: .55; }
+}
+
+/* 🩹 অথ-স্ক্রিনের স্ক্রলযোগ্য কনটেন্ট-লেয়ার — মোবাইলে লম্বা কার্ড (নাম্প্যাড-ধাপ,
+   কীবোর্ড-ওপেন) স্ক্রল করা যায়; টাচ-মোমেন্টাম + স্ক্রল-চেইনিং বন্ধ (বডি
+   রাবার-ব্যান্ড নয়) + ডেস্কটপে পাতলা স্ক্রলবার */
+.lg-auth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+}
+.lg-auth-scroll::-webkit-scrollbar { width: 5px; }
+.lg-auth-scroll::-webkit-scrollbar-thumb { background: rgba(120,130,160,.35); border-radius: 9999px; }
+.dark .lg-key {
+  color: #eceef2;
+  background: rgba(38,42,52,.55);
+  border-color: rgba(255,255,255,.14);
+  box-shadow: 0 6px 16px rgba(0,0,0,.35), inset 0 1.5px 0 rgba(255,255,255,.16), inset 0 -2px 4px rgba(255,255,255,.05);
+}
+.dark .lg-key:active { background: rgba(70,76,90,.8); }
+.dark .lg-key-alt { background: rgba(30,33,40,.35); }
+.dark .lg-key-alt:active { background: rgba(50,55,66,.6); }
+
+/* ── কার্ড-ভেতরের স্টেপ-ট্রানজিশন (smooth animation + jelly) ── */
+.lg-step { position: relative; z-index: 1; }
+
+/* ── প্রগ্রেস-ডট ── */
+.lg-dots { display: flex; gap: 7px; justify-content: center; align-items: center; }
+.lg-dot {
+  width: 7px; height: 7px; border-radius: 9999px;
+  background: rgba(120,130,160,.35);
+  transition: width .35s cubic-bezier(.3,1.4,.4,1), background .3s;
+}
+.lg-dot.on { width: 22px; border-radius: 9999px; background: linear-gradient(90deg, #7c5cff, #8b5cf6); box-shadow: 0 2px 8px rgba(99,102,241,.4); }
+
+/* ── চেকবক্স-টিক (no-recovery) — গ্লাস-পিল ── */
+.lg-check {
+  width: 26px; height: 26px; border-radius: 9px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.55);
+  border: 1.5px solid rgba(255,255,255,.9);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.8);
+  transition: background .25s, transform .2s cubic-bezier(.2,.9,.3,1.5);
+}
+.lg-check.on {
+  background: linear-gradient(135deg, #7c5cff, #8b5cf6);
+  border-color: rgba(255,255,255,.4);
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(99,102,241,.4), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.dark .lg-check { background: rgba(30,33,40,.6); border-color: rgba(255,255,255,.15); }
+
+/* ── গ্লোবাল ট্যাপ-রিপল (main.tsx-এর ডেলিগেশন) ──
+   class="lgr" দেওয়া যে-কোনো বাটনে স্বয়ংক্রিয় তরল-রিপল */
+.lgr { position: relative; overflow: hidden; }
+.lgr .lg-ripple {
+  position: absolute; width: 140px; height: 140px; margin: -70px 0 0 -70px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.55), rgba(255,255,255,0) 70%);
+  pointer-events: none; transform: scale(0); opacity: .8;
+  animation: lgm-ripple .65s ease-out forwards;
+}
+.dark .lgr .lg-ripple { background: radial-gradient(circle, rgba(255,255,255,.25), rgba(255,255,255,0) 70%); }
+
+/* ── Chromium রিফ্র্যাকশন কার্ডেও ── */
+html.refract .lg-card {
+  background: linear-gradient(135deg, rgba(255,255,255,.6) 0%, rgba(255,255,255,.36) 55%, rgba(255,255,255,.48) 100%);
+  -webkit-backdrop-filter: var(--lg,) blur(15px) saturate(190%) brightness(1.08);
+  backdrop-filter: var(--lg,) blur(15px) saturate(190%) brightness(1.08);
+}
+html.refract.dark .lg-card {
+  background: linear-gradient(135deg, rgba(34,38,48,.6) 0%, rgba(22,25,32,.42) 55%, rgba(30,34,42,.5) 100%);
+  -webkit-backdrop-filter: var(--lg,) blur(15px) saturate(170%) brightness(1.05);
+  backdrop-filter: var(--lg,) blur(15px) saturate(170%) brightness(1.05);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-card, .lg-card::before, .lg-btn::after, .lgr .lg-ripple { animation-duration: .01s !important; }
+}
+
+/* ── গ্লোবাল ট্যাপ-রিপল (fixed-ভ্যারিয়েন্ট) — সাধারণ বাটনে ক্লিক-পয়েন্টে
+   আলোর ছোপ (main.tsx-এর ডেলিগেশন)। fixed-পজিশন বলে কন্টেইনিং-ব্লকের
+   ঝামেলা নেই — যে-বাটনের উপরেই ছোপ পড়ুক, সেখানেই ছড়ায়। ── */
+.lg-ripple-fx {
+  position: fixed;
+  width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,.5), rgba(255,255,255,0) 70%);
+  pointer-events: none; transform: scale(0); opacity: .75; z-index: 90;
+  mix-blend-mode: plus-lighter;
+  animation: lgm-ripple .6s ease-out forwards;
+}
+.dark .lg-ripple-fx { background: radial-gradient(circle, rgba(255,255,255,.22), rgba(255,255,255,0) 70%); }

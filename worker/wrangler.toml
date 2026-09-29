@@ -1,0 +1,63 @@
+# ─────────────────────────────────────────────────────────────
+# fcfc backend — Cloudflare Worker configuration
+# ডোমেইন নাম ইচ্ছাকৃতভাবে কোথাও hardcode করা হয়নি।
+# ডিপ্লয় নির্দেশনা README.md-এ আছে।
+# ─────────────────────────────────────────────────────────────
+name = "fcfc-backend"
+main = "src/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[observability]
+enabled = true
+
+# ── Durable Objects ───────────────────────────────────────────
+[[durable_objects.bindings]]
+name = "CHAT_ROOM"        # প্রতিটি চ্যাট/গ্রুপের জন্য ১টি ইনস্ট্যান্স
+class_name = "ChatRoom"
+
+[[durable_objects.bindings]]
+name = "USER_HUB"         # প্রতিটি ইউজারের জন্য ১টি ইনস্ট্যান্স (প্রেজেন্স + নোটিফিকেশন রাউটিং)
+class_name = "UserHub"
+
+[[migrations]]
+tag = "v1"
+# ফ্রি প্ল্যানে Durable Objects ব্যবহারে new_sqlite_classes বাধ্যতামূলক
+new_sqlite_classes = ["ChatRoom", "UserHub"]
+
+# ── D1 (SQL) ──────────────────────────────────────────────────
+# `wrangler d1 create fcfc-db` চালিয়ে যে database_id পাবেন এখানে বসান।
+[[d1_databases]]
+binding = "DB"
+database_name = "fcfc-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+migrations_dir = "migrations"
+
+# ── KV (সেশন ক্যাশ + রেট-লিমিট কাউন্টার) ──────────────────────
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_YOUR_KV_NAMESPACE_ID"
+
+# ── R2 (মিডিয়া/ফাইল, সর্বোচ্চ 2GB/ফাইল, এনক্রিপ্টেড) ──────────
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "fcfc-media"
+
+# ── Non-secret vars ───────────────────────────────────────────
+[vars]
+CALLS_API_BASE = "https://rtc.live.cloudflare.com/v1"
+# Realtime → Serverless SFU থেকে নেওয়া App ID (deploy.mjs CALLS_APP_ID দিলে নিজেই বসায়)
+CALLS_APP_ID = ""
+# secrets (wrangler secret put দিয়ে সেট করুন):
+#   JWT_SECRET          — HMAC signing secret
+#   REFRESH_PEPPER      — refresh token hash pepper
+#   VAPID_PUBLIC_KEY    — Web Push (base64url, uncompressed P-256 point)
+#   VAPID_PRIVATE_KEY   — Web Push (base64url JWK "d")
+#   PUSH_CONTACT        — mailto: address for VAPID JWT sub
+#   CALLS_API_TOKEN     — Serverless SFU অ্যাপের App Secret (অ্যাপ বানানোর সময়ে
+#                          দেখানো ৬৪-অক্ষরের hex; "Create API Token" টোকেন নয়)
+
+# ── ফ্রন্টএন্ড (SPA) static assets — local test-এর জন্য যোগ করা হয়েছে ──
+[assets]
+directory = "./public-dist"
+not_found_handling = "single-page-application"

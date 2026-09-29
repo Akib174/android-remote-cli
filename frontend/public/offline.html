@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0e1220" />
+    <title>fcfc — offline</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body {
+        font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        background: #0e1220;
+        color: #e2e8f0;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 24px;
+      }
+      .logo {
+        width: 64px; height: 64px; border-radius: 16px;
+        background: linear-gradient(135deg, #3d6ef3, #7c3aed);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff; font-weight: 900; font-size: 24px;
+        margin: 0 auto 18px;
+        box-shadow: 0 10px 30px rgba(61,110,243,.35);
+      }
+      h1 { font-size: 20px; margin-bottom: 8px; }
+      p { font-size: 14px; color: #94a3b8; line-height: 1.6; }
+      button {
+        margin-top: 22px; padding: 11px 26px; border: none; border-radius: 12px;
+        background: linear-gradient(135deg, #3d6ef3, #7c3aed);
+        color: #fff; font-size: 14px; font-weight: 600; cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div>
+      <div class="logo">fc</div>
+      <h1>You're offline</h1>
+      <p>fcfc needs a connection to load your chats.<br />Check your internet and try again.</p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </body>
+</html>

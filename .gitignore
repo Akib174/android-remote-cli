@@ -1,0 +1,37 @@
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+!.env.example
+
+# Cloudflare
+.wrangler/
+.deploy-secrets.json
+worker/.vars
+
+# Android
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/.idea/
+android/.kotlin/
+android/*.keystore
+!android/gradle/wrapper/gradle-wrapper.jar
+captures/
+.externalNativeBuild/
+.cxx/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.DS_Store
