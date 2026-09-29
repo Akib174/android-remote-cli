@@ -12,6 +12,6 @@ class FcfcApplication : Application() {
         I18n.init(this)
         EmojiData.init(this)
         UiStore.init(this)
-        ServerConfig.init(this)
+        ServerConfig.init()
     }
 }

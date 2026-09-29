@@ -1,32 +1,39 @@
 package com.fcfc.app.net
 
-import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 
 /**
- * Server URL configuration — the web app uses VITE_API_BASE (build-time env).
- * Android builds cannot embed a per-deployment domain, so the base URL is
- * user-configurable (stored in prefs) and normalized like the web client
- * (trailing slashes stripped).
+ * Server URL configuration — port of the web app's build-time VITE_API_BASE.
+ *
+ * The deployed Worker is the single fixed backend for this build:
+ *   https://fcfc-backend.nakibpro1.workers.dev
+ *
+ * Every Android network hop goes through the Worker:
+ *   - REST   → https://fcfc-backend.nakibpro1.workers.dev/api/...
+ *   - WS     → wss://fcfc-backend.nakibpro1.workers.dev/ws (chat + hub sockets)
+ *   - Calls  → the same origin under /calls/* — the Worker holds the
+ *              Cloudflare Calls app credentials (CALLS_APP_ID / CALLS_API_TOKEN
+ *              / App Secret) server-side and proxies SDP/tracks negotiation.
+ *
+ * There is deliberately NO user-facing server URL entry, no server picker and
+ * no credentials input on Android: the web app never had one, and the
+ * architecture requires all traffic to be proxied by this Worker.
+ * Normalization mirrors the web client (trailing slashes stripped).
  */
 object ServerConfig {
-    private const val PREFS = "fcfc.net"
-    private const val KEY = "baseUrl"
+    /** Canonical deployed Worker base URL (https, no trailing slash). */
+    const val WORKER_BASE = "https://fcfc-backend.nakibpro1.workers.dev"
 
-    val baseUrl = MutableStateFlow("")
+    /** Observable base URL — fixed for the lifetime of the process. */
+    val baseUrl = MutableStateFlow(WORKER_BASE)
 
-    fun init(ctx: Context) {
-        val prefs = ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        baseUrl.value = normalize(prefs.getString(KEY, null) ?: "")
+    /** No-op initializer kept for call-site symmetry; the base is constant. */
+    fun init() {
+        baseUrl.value = WORKER_BASE
     }
 
     fun normalize(url: String): String = url.trim().replace(Regex("/+$"), "")
 
-    fun set(ctx: Context, url: String) {
-        val n = normalize(url)
-        baseUrl.value = n
-        ctx.getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit().putString(KEY, n).apply()
-    }
-
+    /** WebSocket endpoint derived from the same fixed origin. */
     fun wsUrl(): String = baseUrl.value.replaceFirst(Regex("^http"), "ws")
 }
