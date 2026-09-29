@@ -1,6 +1,6 @@
 {
   "name": "Android CLI Environment",
-  "image": "://microsoft.com",
+  "image": "ubuntu:22.04",
   "features": {
     "ghcr.io/devcontainers/features/java:1": {
       "version": "17"
