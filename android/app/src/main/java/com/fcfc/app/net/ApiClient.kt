@@ -193,7 +193,7 @@ object ApiClient {
     // Endpoint surface (shapes verified against worker/src/routes/*)
     // ─────────────────────────────────────────────────────────────────────
 
-    suspend fun health(): JsonObject? = api("/")
+    suspend fun health(): JsonObject? = api("/auth/check?username=health", noAuth = true)
 
     // ── auth ──
     class AuthResult(val user: User, val settings: JsonObject, val access: String, val refresh: String)
