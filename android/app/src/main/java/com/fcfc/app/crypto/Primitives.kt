@@ -90,11 +90,68 @@ object Primitives {
         return c.doFinal(ct)
     }
 
-    // ── PBKDF2-HMAC-SHA256 ──
+    // ── PBKDF2-HMAC-SHA256 (RFC 2898) ──
+    // Built directly on javax.crypto.Mac with the password passed as EXPLICIT
+    // UTF-8 bytes — byte-identical to the web's TextEncoder input for every
+    // password, ASCII and non-ASCII alike.
+    //
+    // The previous SecretKeyFactory/PBEKeySpec route delegated the char[]→byte
+    // conversion to the platform's PBKDF2 engine. That conversion is UTF-8 on
+    // stock Android/JDK but is NOT contractual ("and8bit" variants exist), so
+    // an exotic ROM could silently derive different bytes for non-ASCII
+    // passwords → server sees a wrong client hash → misleading "invalid
+    // credentials". Doing the conversion ourselves removes that variable
+    // entirely. The algorithm and output are unchanged — verified byte-for-
+    // byte against the real web implementation (AuthContractTest vectors).
     fun pbkdf2(secret: String, salt: ByteArray, iterations: Int = 600_000, bits: Int = 256): ByteArray {
-        val spec = javax.crypto.spec.PBEKeySpec(secret.toCharArray(), salt, iterations, bits)
-        val f = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
-        return f.generateSecret(spec).encoded
+        require(iterations >= 1) { "iterations must be >= 1" }
+        require(bits > 0 && bits % 8 == 0) { "bits must be a positive multiple of 8" }
+        val pw = Codec.utf8(secret)
+        val mac = javax.crypto.Mac.getInstance("HmacSHA256")
+        mac.init(SecretKeySpec(pw, "HmacSHA256"))
+        val hLen = 32
+        val dkLen = bits / 8
+        val out = ByteArray(dkLen)
+        var block = 0
+        var off = 0
+        while (off < dkLen) {
+            block++
+            // U1 = HMAC(P, S || INT32BE(block))  — RFC 2898 §5.2: salt FIRST
+            mac.update(salt)
+            mac.update(byteArrayOf(
+                (block ushr 24).toByte(), (block ushr 16).toByte(),
+                (block ushr 8).toByte(), block.toByte(),
+            ))
+            var u = mac.doFinal()
+            val t = u.copyOf()
+            repeat(iterations - 1) {
+                u = mac.doFinal(u)
+                for (i in t.indices) t[i] = (t[i].toInt() xor u[i].toInt()).toByte()
+            }
+            val n = minOf(hLen, dkLen - off)
+            System.arraycopy(t, 0, out, off, n)
+            off += n
+        }
+        return out
+    }
+
+    // ── crypto known-answer self-test (2 vectors, 1 iteration each) ──
+    // Expected values generated with the reference implementation the web
+    // uses (WebCrypto PBKDF2). Runs in microseconds; called before every
+    // login/signup/passcode derivation so a broken or 8-bit-truncating
+    // HmacSHA256/PBKDF2 on an exotic ROM surfaces as a CLEAR device error
+    // instead of a misleading server "invalid credentials". Vector 2 uses a
+    // non-ASCII secret — chars above U+00FF are where truncating encoders
+    // diverge from UTF-8.
+    private const val KAT_ASCII = "MGS2jLNR-od1rCODhAtOsOS4-JLM00EfYuXg_FiwiVs"
+    private const val KAT_UTF8 = "kgq9zND1rJ7fcwhZ94QQqsy9YN10wuuLcLKZ-_5G3-Q"
+
+    fun cryptoSelfTest() {
+        val salt = Codec.utf8("fcfc-kat")
+        val h1 = Codec.b64u(pbkdf2("kat", salt, 1, 256))
+        val h2 = Codec.b64u(pbkdf2("মাল", salt, 1, 256))
+        if (h1 != KAT_ASCII || h2 != KAT_UTF8)
+            throw IllegalStateException("device crypto self-test failed (PBKDF2/HMAC-SHA256 known-answer mismatch)")
     }
 
     // ══════════════════════════════════════════════════════════════════════

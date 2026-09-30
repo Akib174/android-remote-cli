@@ -150,9 +150,17 @@ object ApiClient {
             if (it.code == 204) return null
             val text = it.body?.string() ?: ""
             if (!it.isSuccessful) {
-                val msg = try {
+                // surface the REAL server error + HTTP status — never collapse
+                // every failure into a generic "invalid credentials" (the login
+                // 401 text is the worker's own, everything else stays distinct)
+                val srvMsg = try {
                     JSON.parseToJsonElement(text).jsonObject["error"]?.jsonPrimitive?.content
-                } catch (_: Exception) { null } ?: "HTTP ${it.code}"
+                } catch (_: Exception) { null }
+                val msg = when {
+                    srvMsg != null -> "$srvMsg (HTTP ${it.code})"
+                    text.isNotBlank() -> "HTTP ${it.code}: ${text.take(120)}"
+                    else -> "HTTP ${it.code}"
+                }
                 throw ApiException(it.code, msg)
             }
             if (text.isBlank()) return null

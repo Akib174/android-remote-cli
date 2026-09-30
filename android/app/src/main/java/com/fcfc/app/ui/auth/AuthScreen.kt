@@ -304,7 +304,7 @@ private fun LoginView(onBack: () -> Unit) {
                         Spacer(Modifier.height(6.dp))
                         LgInput(
                             value = username,
-                            onValueChange = { v -> username = v.filter { it.isLetterOrDigit() || it == '_' }.lowercase() },
+                            onValueChange = { v -> username = v.filter { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '_' }.lowercase() },
                             placeholder = t("usernamePh"),
                         )
                     }

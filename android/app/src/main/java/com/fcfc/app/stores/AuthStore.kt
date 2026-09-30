@@ -2,6 +2,7 @@ package com.fcfc.app.stores
 
 import com.fcfc.app.crypto.CryptoGroup
 import com.fcfc.app.crypto.CryptoSessions
+import com.fcfc.app.crypto.Primitives
 import com.fcfc.app.db.FcDb
 import com.fcfc.app.model.User
 import com.fcfc.app.net.ApiClient
@@ -82,6 +83,7 @@ object AuthStore {
     }
 
     suspend fun signup(f: SignupFields): String? = try {
+        Primitives.cryptoSelfTest()
         wipeIfOtherAccount()
         val bundle = CryptoSessions.createIdentityBundle()
         val keys = CryptoSessions.publicBundleForUpload(bundle)
@@ -110,6 +112,10 @@ object AuthStore {
     }
 
     suspend fun login(username: String, password: String): String? = try {
+        // device crypto sanity (microseconds) — a broken PBKDF2/HMAC provider
+        // must surface HERE with a clear message, never as a misleading
+        // server-side "invalid credentials"
+        Primitives.cryptoSelfTest()
         val passHash = CryptoGroup.clientPassHash(username, password)
         val res = ApiClient.login(username, passHash, deviceName())
         finishLogin(res.access, res.refresh, password)
@@ -119,6 +125,7 @@ object AuthStore {
     }
 
     suspend fun loginPin(uidCode: String, passcode: String): String? = try {
+        Primitives.cryptoSelfTest()
         val passcodeHash = CryptoGroup.clientPasscodeHash(uidCode, passcode)
         val res = ApiClient.loginPin(uidCode, passcodeHash, deviceName())
         finishPinLogin(res.access, res.refresh, passcode)
@@ -193,6 +200,7 @@ object AuthStore {
     }
 
     suspend fun setupPasscode(password: String, userIdCode: String, passcode: String): String? = try {
+        Primitives.cryptoSelfTest()
         val me = user.value
         val code = userIdCode.ifEmpty { me?.userIdCode ?: "" }
         val passHash = CryptoGroup.clientPassHash(me?.username ?: "", password)
@@ -226,6 +234,7 @@ object AuthStore {
     }
 
     suspend fun deleteAccount(password: String): String? = try {
+        Primitives.cryptoSelfTest()
         val me = user.value
         val passHash = CryptoGroup.clientPassHash(me?.username ?: "", password)
         ApiClient.deleteAccount(passHash)

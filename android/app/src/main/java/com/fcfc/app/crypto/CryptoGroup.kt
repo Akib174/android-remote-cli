@@ -9,6 +9,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -474,13 +475,18 @@ object CryptoGroup {
     }
 
     // ── client-side password/passcode hashing (auth.ts) ──
-    fun clientPassHash(username: String, password: String): String {
+    // PBKDF2(600k) is heavy — the web app derives it asynchronously in the
+    // browser. Same here: run on Dispatchers.Default so the login button
+    // never blocks Compose's main thread (jank/ANR risk on slow devices).
+    // Salt contract: UTF-8("fcfc-v1:" + username.toLowerCase()) — identical
+    // to the web; verified byte-for-byte in AuthContractTest.
+    suspend fun clientPassHash(username: String, password: String): String {
         val salt = Codec.utf8("fcfc-v1:" + username.lowercase())
-        return Codec.b64u(Primitives.pbkdf2(password, salt, ITER, 256))
+        return withContext(Dispatchers.Default) { Codec.b64u(Primitives.pbkdf2(password, salt, ITER, 256)) }
     }
 
-    fun clientPasscodeHash(uidcode: String, passcode: String): String {
+    suspend fun clientPasscodeHash(uidcode: String, passcode: String): String {
         val salt = Codec.utf8("fcfc-v1:pin:$uidcode")
-        return Codec.b64u(Primitives.pbkdf2(passcode, salt, ITER, 256))
+        return withContext(Dispatchers.Default) { Codec.b64u(Primitives.pbkdf2(passcode, salt, ITER, 256)) }
     }
 }

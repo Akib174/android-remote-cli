@@ -205,7 +205,7 @@ fun SignupWizard(onBack: () -> Unit) {
                         StepHead(t("suUserTitle"), t("suUserSub"))
                         LgInput(
                             value = username,
-                            onValueChange = { v -> username = v.filter { it.isLetterOrDigit() || it == '_' }.lowercase() },
+                            onValueChange = { v -> username = v.filter { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it == '_' }.lowercase() },
                             placeholder = t("usernamePh"), fontSize = 17,
                             leading = { Text("@", color = Color(0xFF94A3B8)) },
                             trailing = {
