@@ -32,15 +32,15 @@ object UiStore {
     data class MenuReactions(
         val emojis: List<String> = emptyList(),
         val more: List<String> = emptyList(),
-    ) {
-        @Transient var onPick: ((String) -> Unit)? = null
-        @Transient var onMore: (() -> Unit)? = null
-    }
+        @Transient val onPick: ((String) -> Unit)? = null,
+        @Transient val onMore: (() -> Unit)? = null,
+    )
 
     @Serializable
-    data class MenuItem(val label: String, val danger: Boolean = false, val icon: String? = null) {
-        @Transient var onClick: (() -> Unit)? = null
-    }
+    data class MenuItem(
+        val label: String, val danger: Boolean = false, val icon: String? = null,
+        @Transient val onClick: (() -> Unit)? = null,
+    )
 
     @Serializable
     data class MenuState(val x: Float, val y: Float, val items: List<MenuItem>, val reactions: MenuReactions? = null)

@@ -9,6 +9,8 @@ import com.fcfc.app.db.FcDb
 import com.fcfc.app.emoji.EmojiData
 import com.fcfc.app.net.ApiClient
 import com.fcfc.app.net.ServerConfig
+import com.fcfc.app.media.Media
+import com.fcfc.app.core.Clipboard
 import com.fcfc.app.stores.AuthStore
 import com.fcfc.app.stores.ChatsStore
 import com.fcfc.app.stores.UiStore
@@ -23,6 +25,8 @@ class FcfcApplication : Application() {
         FcDb.init(this)
         ApiClient.init(this)
         Notify.init(this)
+        Media.init(this)
+        Clipboard.ctx = this
         AuthStore.onKeysRestored = { ChatsStore.onKeysRestored() }
         CryptoGroup.sessionPassword = { AuthStore.password.value }
     }
