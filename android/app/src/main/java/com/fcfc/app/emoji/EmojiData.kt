@@ -2,9 +2,9 @@ package com.fcfc.app.emoji
 
 import android.content.Context
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 
 /**
  * Emoji data core — port of frontend/src/lib/emoji.tsx (data parts).
@@ -23,22 +23,67 @@ object EmojiData {
 
     fun init(ctx: Context) {
         val catText = ctx.assets.open("emoji_categories.json").bufferedReader().use { it.readText() }
-        val cats = json.parseToJsonElement(catText).jsonObject
-        // file shape: {"Smileys & People":[...]} after our extraction? verify: it was [{label, emojis}]
-        categories = run {
-            val el = json.parseToJsonElement(catText)
-            if (el is kotlinx.serialization.json.JsonArray) {
-                el.map { o ->
-                    val obj = o.jsonObject
-                    (obj["label"]?.jsonPrimitive?.contentOrNull ?: "") to
-                        (obj["emojis"]?.let { e -> (e as kotlinx.serialization.json.JsonArray).map { it.jsonPrimitive.content } } ?: emptyList())
-                }
-            } else {
-                cats.keys.map { k -> k to emptyList() }
+        val animText = ctx.assets.open("anim_emoji.json").bufferedReader().use { it.readText() }
+        init(catText, animText)
+    }
+
+    /**
+     * Core initializer over the raw JSON texts — parses the EXACT production shapes.
+     *
+     * Data contract (verified byte-identical to the web source of truth):
+     *  - emoji_categories.json: root is a **JsonArray** of {"label": string,
+     *    "emojis": string[]} — the web EMOJI_CATEGORIES contract
+     *    (frontend/src/lib/emoji.tsx, 5 categories / 712 emojis).
+     *  - anim_emoji.json: root is a **JsonObject** of {emojiChar: webpUrl} —
+     *    the web ANIM_EMOJI_URL contract (frontend/src/lib/animEmojiData.ts,
+     *    848 entries).
+     *
+     * Any other root/item shape is a data-contract violation and fails LOUDLY
+     * with a descriptive error — never a silent fallback to empty emoji data.
+     */
+    fun init(categoriesJson: String, animJson: String) {
+        categories = parseCategories(categoriesJson)
+        animMap = parseAnimMap(animJson)
+        check(categories.isNotEmpty()) { "emoji_categories.json: no categories" }
+        check(animMap.isNotEmpty()) { "anim_emoji.json: no animated emoji entries" }
+    }
+
+    private fun parseCategories(text: String): List<Pair<String, List<String>>> {
+        val root = json.parseToJsonElement(text)
+        check(root is JsonArray) {
+            "emoji_categories.json root must be a JsonArray [{label,emojis}] " +
+                "(web EMOJI_CATEGORIES contract) — got ${root::class.simpleName}"
+        }
+        return root.mapIndexed { i, el ->
+            val obj = el as? JsonObject
+                ?: error("emoji_categories.json[$i] must be a JsonObject — got ${el::class.simpleName}")
+            val label = (obj["label"] as? JsonPrimitive)?.takeIf { it.isString }?.content
+                ?: error("emoji_categories.json[$i].label must be a string")
+            val arr = obj["emojis"] as? JsonArray
+                ?: error("emoji_categories.json[$i].emojis (category '$label') must be an array")
+            val emojis = arr.mapIndexed { j, e ->
+                (e as? JsonPrimitive)?.takeIf { it.isString }?.content
+                    ?: error("emoji_categories.json[$i].emojis[$j] must be a string")
+            }
+            check(label.isNotBlank()) { "emoji_categories.json[$i].label must not be blank" }
+            check(emojis.isNotEmpty()) { "emoji_categories.json[$i] (category '$label') must not be empty" }
+            label to emojis
+        }
+    }
+
+    private fun parseAnimMap(text: String): Map<String, String> {
+        val root = json.parseToJsonElement(text)
+        check(root is JsonObject) {
+            "anim_emoji.json root must be a JsonObject {emojiChar:url} " +
+                "(web ANIM_EMOJI_URL contract) — got ${root::class.simpleName}"
+        }
+        return buildMap(root.size) {
+            for ((k, v) in root.entries) {
+                val p = v as? JsonPrimitive
+                check(p != null && p.isString) { "anim_emoji.json value for '$k' must be a string URL" }
+                put(k, p.content)
             }
         }
-        val animText = ctx.assets.open("anim_emoji.json").bufferedReader().use { it.readText() }
-        animMap = json.parseToJsonElement(animText).jsonObject.entries.associate { (k, v) -> k to v.jsonPrimitive.content }
     }
 
     fun allEmojis(): List<String> = categories.flatMap { it.second }
