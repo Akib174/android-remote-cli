@@ -23,6 +23,11 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Run unit tests (auth contract + emoji regression + startup smoke)
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest --no-daemon
+
       - name: Build debug APK
         run: |
           chmod +x gradlew
