@@ -1,7 +1,9 @@
 package com.fcfc.app.ui.chat
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -23,8 +25,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,6 +37,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -302,28 +308,95 @@ private fun BubbleBox(
     }
 }
 
+// ── Tick marks (Telegram-style) — exact port of web Ticks() ──────────────────
+// Web (components/chat/MessageBubble.tsx): state = failed ? 'failed' : pending
+// ? 'pending' : read ? 'read' : 'sent' — NOTE: 'delivered' shows ONE tick on
+// web (single check covers sent AND delivered); the double check appears only
+// for 'read' (sky). Web renders SVG icons (lib/icons.tsx):
+//   IcCheck        "M4 12.5l5 5L20 6.5"
+//   IcDoubleCheck  "M1.5 12.5l5 5L17.5 6.5M10 15.5l2 2L23 6.5"
+// The two checks interlock via PATH GEOMETRY (second starts at x=10 while the
+// first ends at x=17.5) — the web never uses negative margins/spacing, and
+// neither do we. stroke=currentColor, strokeWidth=2.4, round caps/joins,
+// 24-unit viewBox rendered at size 18.
+internal enum class TickState { FAILED, PENDING, READ, SENT }
+
+internal const val TICK_CHECK_PATH = "M4 12.5l5 5L20 6.5"
+internal const val TICK_DOUBLE_CHECK_PATH = "M1.5 12.5l5 5L17.5 6.5M10 15.5l2 2L23 6.5"
+
+/** Web Ticks state priority: failed > pending > read > sent (delivered → single check). */
+internal fun tickStateOf(msg: Message): TickState = when {
+    msg.failed == true -> TickState.FAILED
+    msg.pending == true -> TickState.PENDING
+    msg.read == true -> TickState.READ
+    else -> TickState.SENT
+}
+
 @Composable
 private fun Ticks(msg: Message) {
     val colors = fcfcColors(UiStore.theme.value == "dark")
-    val tickColor = when {
-        msg.read == true -> colors.tickRead
-        msg.delivered == true -> if (UiStore.theme.value == "dark") Color(0xFF93B4FF) else Color(0xFF7A96F3)
-        msg.failed == true -> Color(0xFFE5484D)
-        msg.pending == true -> Color(0x8894A3B8)
-        else -> Color(0x8894A3B8)
-    }
-    if (msg.pending == true) {
-        Text("🕓", fontSize = 10.sp)
-    } else if (msg.failed == true) {
-        Text("!", fontSize = 11.sp, color = Color(0xFFE5484D), fontWeight = FontWeight.Black)
-    } else if (msg.read == true || msg.delivered == true) {
-        // double tick
-        Row {
-            Text("✓", fontSize = 11.sp, color = tickColor, fontWeight = FontWeight.Bold)
-            Text("✓", fontSize = 11.sp, color = tickColor, fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = (-4).dp))
+    // read → sky-500/sky-400 (web text-sky-500 dark:text-sky-400; theme tickRead
+    // is exactly #0EA5E9 / #38BDF8). sent/pending inherit the meta-row ambient
+    // color, same as the web span does.
+    val readColor = colors.tickRead
+    val ambient = colors.bubbleOutText.copy(alpha = 0.55f)
+    val state = tickStateOf(msg)
+    // web: motion.span key={state} — remount per state with a spring pop
+    // (framer initial: scale 0.3, rotate -35, opacity 0 → animate: 1/0/1,
+    // spring stiffness 540, damping 20).
+    key(state) {
+        val scaleA = remember { Animatable(0.3f) }
+        val rotA = remember { Animatable(-35f) }
+        val alphaA = remember { Animatable(0f) }
+        LaunchedEffect(state) {
+            launch { scaleA.animateTo(1f, spring(dampingRatio = 0.5f, stiffness = 700f)) }
+            launch { rotA.animateTo(0f, spring(dampingRatio = 0.5f, stiffness = 700f)) }
+            launch { alphaA.animateTo(1f, spring(dampingRatio = 1f, stiffness = 1400f)) } // no overshoot (alpha ∈ [0,1])
         }
-    } else {
-        Text("✓", fontSize = 11.sp, color = tickColor, fontWeight = FontWeight.Bold)
+        Box(
+            modifier = Modifier
+                .graphicsLayer {
+                    scaleX = scaleA.value; scaleY = scaleA.value; rotationZ = rotA.value
+                }
+                .alpha(alphaA.value),
+        ) {
+            when (state) {
+                TickState.FAILED ->
+                    // web: <span className="text-rose-500 font-bold text-[14px]">!</span>
+                    Text("!", fontSize = 14.sp, color = Color(0xFFF43F5E), fontWeight = FontWeight.Bold)
+                TickState.PENDING ->
+                    // web: <Emoji char="🕓" size={14}/> — Apple artwork, not a native glyph
+                    EmojiImage("🕓", 14.dp)
+                TickState.READ -> TickIcon(TICK_DOUBLE_CHECK_PATH, readColor)
+                TickState.SENT -> TickIcon(TICK_CHECK_PATH, ambient)
+            }
+        }
+    }
+}
+
+/**
+ * Stroke-drawn vector icon — exact port of web icons.tsx mk(): 24-unit viewBox
+ * path rendered at 18dp, stroke = tint, strokeWidth 2.4 (viewBox units, scaled
+ * with the path), round caps and joins, no fill.
+ */
+@Composable
+private fun TickIcon(pathData: String, color: Color) {
+    val path = remember(pathData) {
+        androidx.compose.ui.graphics.vector.PathParser().parsePathString(pathData).toPath()
+    }
+    androidx.compose.foundation.Canvas(modifier = Modifier.size(18.dp)) {
+        val scale = size.width / 24f
+        withTransform({ scale(scale, scale, pivot = androidx.compose.ui.geometry.Offset.Zero) }) {
+            drawPath(
+                path = path,
+                color = color,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(
+                    width = 2.4f,
+                    cap = androidx.compose.ui.graphics.StrokeCap.Round,
+                    join = androidx.compose.ui.graphics.StrokeJoin.Round,
+                ),
+            )
+        }
     }
 }
 
